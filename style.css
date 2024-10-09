@@ -13,8 +13,19 @@
     font-style: normal;
 }
 
-h1, h2, h3 {
+h1, h2, h3{
     font-family: 'JetBrainsMono', monospace; /* Set custom font for headers */
+}
+
+.center-aligned {
+    font-family: JetBrainsMono;
+    text-align: center;
+}
+
+.center-aligned-italic {
+    font-family: JetBrainsMono;
+    font-style: italic;
+    text-align: center;
 }
 
 body {
@@ -24,6 +35,10 @@ body {
     padding: 0;
     background-color: #f4f4f4;
     color: #333;
+}
+
+.JBMono-body {
+    font-family: 'JetBrainsMono', monospace;
 }
 
 header {
@@ -90,13 +105,123 @@ header {
 
 }
 
+.header-img {
+    width: 40px; /* Control the width */
+    height: auto; /* Ensure the aspect ratio is maintained */
+    margin-left: 20px; /* Add space between text and image */
+    vertical-align: middle; /* Align the image with the middle of the text */
+}
+
+.project-img {
+    width: 150px; /* Adjust the size */
+    height: auto; /* Maintain aspect ratio */
+    display: block;
+    margin: 10px auto; /* Center the image with auto margin */
+}
+
+
+#project-highlights {
+    display: flex; /* Flexbox to align text and video side by side */
+    justify-content: space-between; /* Space between text and video */
+    align-items: flex-start; /* Align text and video to the top */
+    margin: 20px auto; /* Center the section */
+    width: 80%; /* Set a width for the section */
+    max-width: 1200px; /* Optional: Set a max width to prevent it from being too wide */
+    background-color: darkslategray;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.project {
+    display: flex;
+    justify-content: space-between; /* Space between the text and image */
+    align-items: center; /* Vertically center the text and image */
+    margin: 0px auto;
+}
+
+.project-text {
+    font-family: "JetBrainsMono", monospace;
+    flex: 1; /* The text takes up one part of the available space */
+    margin-right: 20px; /* Adds some space between the text and the image */
+    color: #fff;
+}
+
+.project-text h2 {
+    font-size: 1.6em; /* Larger font for the project name */
+    margin: 0 0 10px;
+}
+
+.project-text p {
+    font-size: 1em;
+    margin: 0;
+}
+
+.project-text a {
+    color: skyblue;
+    text-decoration: none;
+}
+
+.project-text li {
+    color: lightsalmon;
+    font-size: 0.8em;
+}
+
+/* Image section */
+.project-image img {
+    width: 480px; /* Adjust the image size */
+    height: auto; /* Maintain aspect ratio */
+    display: block;
+}
+
+.project-video video {
+    width: 480px; /* Adjust the video size */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Ensure the video is displayed as a block element */
+}
+
+#research {
+    display: flex; /* Flexbox to align text and image side by side */
+    justify-content: space-between;
+    align-items: flex-start; /* Align text and image at the top */
+    margin: 20px auto;
+    width: 80%;
+    max-width: 1200px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.research {
+    display: flex;
+    justify-content: space-between; /* Space between the text and image */
+    align-items: center; /* Vertically center the text and image */
+    margin: 0px auto;
+}
+
+.research-text {
+    font-family: "JetBrainsMono", monospace;
+    flex: 1;
+    margin-right: 20px;
+    color: black;
+}
+
+.research-image {
+    max-width: 400px; /* Limit the maximum width */
+    width: 100%; /* Ensure responsiveness */
+    height: auto; /* Maintain aspect ratio */
+    display: block;
+}
+
+.research-text li{
+    color: darkblue;
+}
+
 section {
     padding: 20px;
     margin: 20px auto;
     background-color: #fff;
     border-radius: 10px;
     width: 80%;
-    max-width: 800px;
+    max-width: 1200px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 section2 {
@@ -120,3 +245,4 @@ a {
     color: #004b6b;
     text-decoration: none;
 }
+
