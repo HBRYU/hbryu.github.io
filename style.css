@@ -1,6 +1,24 @@
 /* General body and layout styles */
+@font-face {
+    font-family: 'JetBrainsMono';
+    src: url('fonts/JetBrainsMono-Light.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NotoSansKR';
+    src: url('fonts/NotoSansKR-VariableFont_wght.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+h1, h2, h3 {
+    font-family: 'JetBrainsMono', monospace; /* Set custom font for headers */
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'NotoSansKR', sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 0;
@@ -11,7 +29,8 @@ body {
 header {
     position: relative;
     text-align: center;
-    height: 300px; /* Adjust this height to match your banner size */
+    height: 500px; /* Set the height of the banner */
+    overflow: hidden; /* Prevents content overflow */
 }
 
 .banner-container {
@@ -20,14 +39,20 @@ header {
     left: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    z-index: 1; /* The banner will sit behind the profile and bio */
+    z-index: 1;
+    background-image: url('banner.png'); /* Your banner image */
+    background-attachment: fixed; /* Enables parallax effect */
+    background-position: center; /* Centers the background image */
+    background-repeat: no-repeat;
+    background-size: cover; /* Ensures the image covers the container */
 }
 
-.banner {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Ensure the banner image fills the container */
+.bio {
+    font-family: 'JetBrainsMono', monospace;
+    background-color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-bio {
@@ -35,29 +60,24 @@ header {
     align-items: center;
     justify-content: center;
     position: relative;
-    top: 150px; /* Adjust to ensure it overlaps with the banner */
-    z-index: 2; /* Ensure the profile and bio appear above the banner */
-    padding: 20px;
+    top: 100px; /* Adjust to position the profile and bio properly */
+    z-index: 2;
+    padding: 10px;
 }
 
 .profile-img {
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
     border-radius: 50%;
     border: 5px solid white;
     object-fit: cover;
     margin-right: 20px;
 }
 
-.bio {
-    background-color: white;
-    padding: 10px 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.bio h1 {
-    margin: 0;
+.github-img {
+    width: 25px;
+    height: 25px;
+    display: inline-block;
 }
 
 section {
@@ -67,4 +87,22 @@ section {
     border-radius: 10px;
     width: 80%;
     max-width: 800px;
+}
+
+section h2 {
+    margin-top: 0;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    margin-bottom: 10px;
+}
+
+a {
+    color: #004b6b;
+    text-decoration: none;
 }

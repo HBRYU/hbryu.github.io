@@ -3,54 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hanbie Ryu - CV</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .profile-bio {
-            display: flex; /* Align items side by side */
-            align-items: center; /* Vertically center the image and bio */
-            padding: 20px;
-        }
-
-        .profile-img {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%; /* Circular image */
-            object-fit: cover;
-            margin-right: 20px; /* Space between image and bio */
-        }
-
-        .bio {
-            max-width: 600px; /* Limit bio width */
-        }
-    </style>
+    <title>Hanbie Ryu - Profile</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Banner Image -->
     <header>
         <div class="banner-container">
-            <img src="Blade Weaver.png" alt="Banner Image" class="banner">
         </div>
 
         <!-- Profile and Bio -->
         <div class="profile-bio">
             <!-- Profile Image -->
-            <img src="Profile.jpg" alt="Profile Image" class="profile-img">
+            <img src="profile.jpg" alt="Profile Image" class="profile-img">
 
             <!-- Name and Bio -->
             <div class="bio">
                 <h1>Hanbie Ryu</h1>
-                <p>Seoul, South Korea | <a href="mailto:hanbie.ryu@yonsei.ac.kr">hanbie.ryu@yonsei.ac.kr</a> | <a href="https://github.com/HBRYU" target="_blank">github.com/HBRYU</a></p>
+                <p>Seoul, South Korea | <a href="mailto:hanbie.ryu@yonsei.ac.kr">hanbie.ryu@yonsei.ac.kr</a> | 
+                <a href="https://github.com/HBRYU" target="_blank">
+                    <img src="logo images/github.png" class="github-img" target="_blank">
+                </a> | <a href="cv.pdf" class="link" target="_blank">CV</a></p>
             </div>
         </div>
     </header>
 
-    <section id="about">
-        <h2>About Me</h2>
-        <p>• Born in Sheffield, England, and currently majoring in Artificial Intelligence at Yonsei University.<br>
-        • Passionate about game development, drawing, and playing the piano.<br>
-        • Experienced in both design and engineering, with a deep theoretical understanding of AI and computer science.</p>
-    </section>
 
+    <section id="bio">
+        <h2>Bio</h2>
+        <p>• Majoring Artificial Intelligence at Yonsei University, South Korea<br>
+        • Experienced in both design and engineering, with a deep theoretical understanding of AI and computer science.<br>
+        • Passionate indie game developer and artist<br>
+        • Research Interests: Deep reinforcement learning and applying advanced AI agents to virtual and physical environments to solve challenging tasks</p>
+    </section>
 
     <section id="education">
         <h2>Education</h2>
@@ -68,6 +53,7 @@
             <li>1st semester, 2023 – Honors</li>
             <li>1st semester, 2024 – Honors</li>
         </ul>
+
     </section>
 
     <section id="projects">
@@ -88,13 +74,6 @@
             <li>Developed a codebase for managing different model architectures (REDCNN, U-net, etc.)</li>
             <li>Implemented a WGAN-GP system to prevent over-smoothing of generated CT images</li>
             <li>Currently experimenting with VGG loss alongside other losses for improved image features</li>
-        </ul>
-
-        <h3>Developing Machine Learning Agents in Unity, personal project (ongoing)</h3>
-        <p><a href="https://github.com/HBRYU/Tower_B-40" target="_blank">[github.com/HBRYU/Tower_B-40]</a> June 2024 – Present</p>
-        <ul>
-            <li>Experimenting with various machine learning methods for virtual agents</li>
-            <li>Developed a graph-based neural network system for NEAT with a live visualizer for real-time analysis</li>
         </ul>
     </section>
 
@@ -117,7 +96,8 @@
 
     <section id="research">
         <h2>Research Interests</h2>
-        <p>Machine Learning: Highly interested in deep reinforcement learning, particularly applying advanced AI agents to virtual and physical environments.</p>
+        
     </section>
+
 </body>
 </html>
