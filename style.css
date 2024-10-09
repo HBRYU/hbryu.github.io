@@ -8,14 +8,36 @@ body {
 }
 
 header {
+    text-align: center;
+    padding: 20px;
     background-color: #333;
     color: #fff;
-    padding: 20px;
-    text-align: center;
+    position: relative;
+}
+
+.banner {
+    width: 100%;
+    height: auto;
+    max-height: 300px; /* Adjust as needed */
+    object-fit: cover; /* Ensures the image fits within the banner space */
+}
+
+.profile-container {
+    position: relative;
+    top: -60px; /* Adjust this value to place the profile image correctly */
+}
+
+.profile-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    object-fit: cover;
+    margin-bottom: -80px; /* To align text below correctly */
 }
 
 header h1 {
-    margin: 0;
+    margin-top: 0;
     font-size: 36px;
 }
 
@@ -50,4 +72,3 @@ ul {
 ul li {
     margin-bottom: 10px;
 }
-
