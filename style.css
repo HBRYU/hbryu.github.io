@@ -1,3 +1,4 @@
+/* General body and layout styles */
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
@@ -8,42 +9,55 @@ body {
 }
 
 header {
-    text-align: center;
-    padding: 20px;
-    background-color: #333;
-    color: #fff;
     position: relative;
+    text-align: center;
+    height: 300px; /* Adjust this height to match your banner size */
+}
+
+.banner-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1; /* The banner will sit behind the profile and bio */
 }
 
 .banner {
     width: 100%;
-    height: auto;
-    max-height: 300px; /* Adjust as needed */
-    object-fit: cover; /* Ensures the image fits within the banner space */
+    height: 100%;
+    object-fit: cover; /* Ensure the banner image fills the container */
 }
 
-.profile-container {
+.profile-bio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    top: -60px; /* Adjust this value to place the profile image correctly */
+    top: 150px; /* Adjust to ensure it overlaps with the banner */
+    z-index: 2; /* Ensure the profile and bio appear above the banner */
+    padding: 20px;
 }
 
 .profile-img {
     width: 150px;
     height: 150px;
     border-radius: 50%;
-    border: 5px solid #fff;
+    border: 5px solid white;
     object-fit: cover;
-    margin-bottom: -80px; /* To align text below correctly */
+    margin-right: 20px;
 }
 
-header h1 {
-    margin-top: 0;
-    font-size: 36px;
+.bio {
+    background-color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-header p a {
-    color: #ff9800;
-    text-decoration: none;
+.bio h1 {
+    margin: 0;
 }
 
 section {
@@ -53,22 +67,4 @@ section {
     border-radius: 10px;
     width: 80%;
     max-width: 800px;
-}
-
-section h2 {
-    margin-top: 0;
-}
-
-a {
-    color: #333;
-    text-decoration: underline;
-}
-
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-ul li {
-    margin-bottom: 10px;
 }
