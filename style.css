@@ -127,7 +127,7 @@ header {
     margin: 20px auto; /* Center the section */
     width: 80%; /* Set a width for the section */
     max-width: 1200px; /* Optional: Set a max width to prevent it from being too wide */
-    background-color: rgb(78, 80, 83);
+    background-color: rgb(94, 97, 103);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -161,7 +161,7 @@ header {
 }
 
 .project-text li {
-    color: lightsalmon;
+    color: rgb(255, 235, 104);
     font-size: 0.8em;
 }
 
@@ -215,7 +215,7 @@ header {
 }
 
 .research-text a{
-    color: lightskyblue;
+    color: rgb(111, 170, 207);
     text-decoration: underline;
 }
 
