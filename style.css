@@ -29,7 +29,7 @@ h1, h2, h3{
 }
 
 body {
-    font-family: 'NotoSansKR', sans-serif;
+    font-family: 'JetBrainsMono';
     line-height: 1.6;
     margin: 0;
     padding: 0;
@@ -127,7 +127,7 @@ header {
     margin: 20px auto; /* Center the section */
     width: 80%; /* Set a width for the section */
     max-width: 1200px; /* Optional: Set a max width to prevent it from being too wide */
-    background-color: darkslategray;
+    background-color: rgb(78, 80, 83);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -157,7 +157,7 @@ header {
 
 .project-text a {
     color: skyblue;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .project-text li {
@@ -185,7 +185,7 @@ header {
     margin: 20px auto;
     width: 80%;
     max-width: 1200px;
-    background-color: white;
+    background-color: rgb(235, 243, 247);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -211,7 +211,12 @@ header {
 }
 
 .research-text li{
-    color: darkblue;
+    color: rgb(45, 113, 181);
+}
+
+.research-text a{
+    color: lightskyblue;
+    text-decoration: underline;
 }
 
 section {
