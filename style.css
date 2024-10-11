@@ -127,8 +127,8 @@ header {
     margin: 20px auto; /* Center the section */
     width: 80%; /* Set a width for the section */
     max-width: 1200px; /* Optional: Set a max width to prevent it from being too wide */
-    background-color: rgb(94, 97, 103);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: rgb(101, 101, 101);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .project {
@@ -185,8 +185,8 @@ header {
     margin: 20px auto;
     width: 80%;
     max-width: 1200px;
-    background-color: rgb(235, 243, 247);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: rgb(76, 81, 83);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .research {
@@ -200,7 +200,7 @@ header {
     font-family: "JetBrainsMono", monospace;
     flex: 1;
     margin-right: 20px;
-    color: black;
+    color: rgb(255, 255, 255);
 }
 
 .research-image {
@@ -211,7 +211,8 @@ header {
 }
 
 .research-text li{
-    color: rgb(45, 113, 181);
+    color: rgb(151, 197, 243);
+    font-size: 0.9em;
 }
 
 .research-text a{
@@ -233,6 +234,15 @@ section2 {
     text-align: center;
 }
 
+section-transparent {
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 1200px;
+    align-self: center;
+}
+
 section h2 {
     margin-top: 0;
 }
@@ -249,5 +259,25 @@ ul li {
 a {
     color: #004b6b;
     text-decoration: none;
+}
+
+hint {
+    color: rgb(174, 184, 188);
+}
+
+.photo-gallery {
+    display: flex; /* Flexbox to align images in a row */
+    overflow-x: scroll; /* Horizontal scroll */
+    height: 300px; /* Fixed height for the gallery */
+    gap: 10px; /* Space between images */
+    padding: 10px;
+    scroll-behavior: smooth; /* Smooth scrolling when manually scrolled */
+}
+
+.photo-gallery img {
+    height: 100%; /* Images take full height of the container */
+    width: auto; /* Maintain aspect ratio */
+    border-radius: 10px; /* Optional: Rounded corners */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow to images */
 }
 
