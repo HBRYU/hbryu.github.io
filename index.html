@@ -60,6 +60,21 @@
             });
         });
     </script>
+
+    <script>
+        function toggleList(listId) {
+            const list = document.getElementById(listId);
+            list.classList.toggle('open');
+
+            // Optional: Adjust max-height dynamically for varying content heights
+            if (list.classList.contains('open')) {
+                list.style.maxHeight = list.scrollHeight + "px";
+            } else {
+                list.style.maxHeight = null;
+            }
+        }
+
+    </script>
     
 
     <section2 id="bio"></section2>
@@ -140,14 +155,50 @@
             <p><hint>4 | </hint>Talk at 2023 SKYST Conference, Seoul Campus, KAIST, August 2023</p>
             <p><hint>5 | </hint><a href="https://github.com/HBRYU/Tower_B-40" target="_blank">[github.com/HBRYU/Tower_B-40]</a></p>
             <img width="100" src="resources/Death.gif">
+            
+            <!-- Button to toggle project details -->
+            <button class="toggle-btn" onclick="toggleList('list1')">Project Details</button>
+    
+            <!-- Toggle list containing the project details -->
+            <ul class="toggle-list" id="list1">
+                <p>"Blade Weaver", aka "Tower B-40" is a game I first came up with in 2017 with a few iterations over the years.<br> I began its current development in 2023, and it is still ongoing as a side project, planned for release in the future.</p>   
+                <br>
+                <li>- Optimized pathfinding over long distances by combining graph-based and grid-based A* pathfinding algorithms, improving performance and precision</li>
+                <li>- Live pixel-perfect rendering to align on-screen elements to world grid while maintaining classic pixel art aesthetic</li>
+                <li>- Mesh-based "wings" with precise, live vertex calculations for fluid and dynamic visuals in combat</li>
+                <li>- Enemy AI with state machine architecture that predicts player movement and calculates target positions for each limb for optimal movement in physical environment</li>
+                <li>- Live inverse-kinematics calculations</li>
+                <li>- Background parallaxing and smooth camera controls for optimal player experience</li>
+                <li>- Mechanical SFXs designed using frequency modulation synthesis</li>
+                <li>- Audio pooling for fast, on-demand audio source generation</li>
+                <br>
+            </ul>
+    
+            
         </div>
+    
+        <!-- Video on the right side -->
         <div class="project-video">
             <video controls>
                 <source src="resources/Blade Weaver Demo 2.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
-    </section>    
+    </section>
+
+    <section id="project-highlights">
+        <!-- Photo Gallery moved below Project Details -->
+        <div class="photo-gallery">
+            <img src="resources/bw0.png" alt="Photo 0">
+            <img src="resources/bw1.png" alt="Photo 1">
+            <img src="resources/bw2.png" alt="Photo 2">
+            <img src="resources/bw3.png" alt="Photo 3">
+            <img src="resources/bw4.png" alt="Photo 4">
+            <img src="resources/bw5.png" alt="Photo 5">
+            <img src="resources/bw6.png" alt="Photo 6">
+        </div>
+    </section>
+    
     
     <br>
 
@@ -155,22 +206,35 @@
 
     <br>
 
+    <!-- Research Experience Section -->
     <section id="research">
         <div class="research-text">
             <h3>CT Image Denoising at Medisys Lab, Yonsei University - 2024<img src="logo images/YonseiUniversity 2.svg" class="header-img"></h3>
             <p>As an undergraduate research intern, I understood and implemented image processing solutions using a variety of CNN architectures and training methods</p>
             <p>Personal contributions:</p>
             <ul>
-                <li> <hint>- a) </hint>Experimented with REDCNN and U-net architectures for CT denoising</li>
-                <li> <hint>- b) </hint>Developed a codebase for managing different model architectures and experiments</li>
-                <li> <hint>- c) </hint>Implemented a WGAN-GP system to prevent over-smoothing of generated CT images</li>
+                <li><hint>- a) </hint>Experimented with REDCNN and U-net architectures for CT denoising</li>
+                <li><hint>- b) </hint>Developed a codebase for managing different model architectures and experiments</li>
+                <li><hint>- c) </hint>Implemented a WGAN-GP system to prevent over-smoothing of generated CT images</li>
             </ul>
             <p><a href="https://sites.google.com/view/yonsei-medisyslab/home?authuser=0" target="_blank">[Medisys Lab]</a></p>
+            <button class="toggle-btn" onclick="toggleList('list2')">Details</button>
+
+            
+            
+
+            <ul class="toggle-list" id="list2">
+                <li><a href="resources/Medisys Intern 2024 Report.pdf" target="_blank">Project review (Sept. 2024)</a></li>
+                <li>References</li>
+                <li>- <a href="https://arxiv.org/pdf/1702.00288" target="_blank">Hu Chen, et al., 2017</a></li>
+                <li>- <a href="https://jonathan-hui.medium.com/gan-wasserstein-gan-wgan-gp-6a1a2aa1b490" target="_blank">Johnathan Hui, 2018</a></li>
+            </ul>
         </div>
         <div>
             <img src="resources/result_535.png" alt="CT Image Example" class="research-image">
         </div>
     </section>
+
 
     <br>
 

@@ -265,21 +265,25 @@ hint {
     color: rgb(174, 184, 188);
 }
 
+/* Contain the gallery within the section */
 .photo-gallery {
-    display: flex; /* Flexbox to align images in a row */
-    overflow-x: scroll; /* Horizontal scroll */
-    height: 300px; /* Fixed height for the gallery */
-    gap: 10px; /* Space between images */
+    display: flex;
+    overflow-x: auto; /* Allow horizontal scroll */
+    height: 300px; /* Set a reasonable fixed height for the images */
+    max-width: 100%; /* Make sure the gallery doesn’t stretch beyond the parent */
+    gap: 10px; /* Add some spacing between the images */
     padding: 10px;
-    scroll-behavior: smooth; /* Smooth scrolling when manually scrolled */
+    box-sizing: border-box;
 }
 
+/* Adjust the images inside the gallery */
 .photo-gallery img {
-    height: 100%; /* Images take full height of the container */
+    height: 100%; /* Ensure the images fill the height of the gallery */
     width: auto; /* Maintain aspect ratio */
-    border-radius: 10px; /* Optional: Rounded corners */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow to images */
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
+
 
 /* Side Navigation Bar */
 .side-nav {
@@ -344,4 +348,47 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Updated toggle-list for smooth expansion */
+.toggle-list {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+    background-color: #212121;
+    padding: 0 20px;
+    border-radius: 5px;
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.2);
+    width: 100%; /* Ensure it takes up the full width of the parent */
+    box-sizing: border-box; /* Include padding and border in the width */
+}
 
+.toggle-btn {
+    display: block;
+    text-align: center;
+    padding: 10px 20px;
+    background-color: #101010; /* Default background color */
+    color: #fff; /* Default text color */
+    border-radius: 5px;
+    margin: 10px 0;
+    cursor: pointer;
+    font-family: "JetBrainsMono", monospace;
+    border: none;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth color transition */
+}
+
+.toggle-btn:hover {
+    background-color: #c2d0d4; /* Change background color on hover */
+    color: #000000; /* Change text color on hover */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Optional: Add shadow on hover */
+}
+
+.toggle-list.open {
+    max-height: 1500px; /* Large enough to handle the gallery */
+    opacity: 1;
+    padding: 10px 20px;
+}
+
+/* Optional: Smooth transition for padding */
+.toggle-list {
+    transition: max-height 0.5s ease, opacity 0.5s ease, padding 0.5s ease;
+}
