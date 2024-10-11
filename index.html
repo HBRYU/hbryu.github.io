@@ -28,6 +28,42 @@
         </div>
     </header>
 
+    <div class="side-nav">
+        <a href="#bio" class="dot" data-label="Bio">[0]</a>
+        <a href="#education" class="dot" data-label="Education">[1]</a>
+        <a href="#honors-awards" class="dot" data-label="Honors">[2]</a>
+        <a href="#project-highlights" class="dot" data-label="Projects">[3]</a>
+        <a href="#research" class="dot" data-label="Research">[4]</a>
+        <a href="#skills" class="dot" data-label="Technologies">[5]</a>
+        <a href="#personal-life" class="dot" data-label="Personal Life">[6]</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.side-nav a');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    const yOffset = -150; // Adjust this value to set the distance from the top (negative value moves the section down)
+                    const yPosition = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    
+                    window.scrollTo({
+                        top: yPosition,
+                        behavior: 'smooth' // Smooth scroll behavior
+                    });
+                });
+            });
+        });
+    </script>
+    
+
+    <section2 id="bio"></section2>
+
     <br>
 
     <section2 id="roles">
@@ -37,7 +73,7 @@
 
     <br>
 
-    <section id="bio">
+    <section id="bio_">
         <p>I was born in Sheffield, England and I am currently majoring in Artificial Intelligence at Yonsei University</p>
         <p>I have over 7 years of experience in C# development using Unity, and I am proficient in Python for machine learning and data analysis. Combining these areas, I aim to research better ways to develop more intelligent systems in virtual environments like video games, or applying them to robotics to solve complex real-world problems.</p>
         
@@ -152,7 +188,7 @@
 
     <br>
 
-    <section>
+    <section id="personal-life">
         <h3>Personal Life</h3>
         <p>I enjoy drawing on my free time, as well as playing the piano and composing music. </p>
         <p>I also enjoy photography:</p>

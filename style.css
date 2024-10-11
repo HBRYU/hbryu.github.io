@@ -281,3 +281,67 @@ hint {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow to images */
 }
 
+/* Side Navigation Bar */
+.side-nav {
+    position: fixed;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1000;
+}
+
+.side-nav a {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px; /* Adjust the width to fit the index labels */
+    height: 40px; /* Adjust the height to make it square */
+    background-color: #3333337f;
+    border-radius: 10px; /* Rounded square effect */
+    margin: 15px 0;
+    font-family: 'JetBrainsMono', monospace; /* Set the font for the index */
+    color: #ffffff8a; /* Index label text color */
+    font-size: 1em; /* Adjust the size of the index label */
+    transition: all 0.3s ease;
+    text-align: center;
+    overflow: visible; /* Allows hover effects without shifting other elements */
+}
+
+.side-nav a:hover {
+    background-color: #525252;
+    color: #ffffff; /* Index label text color */
+    transform: scale(1.1); /* Slightly enlarge the square on hover */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow to the label */
+}
+
+.side-nav a::after {
+    content: attr(data-label); /* Display the section title from the data-label */
+    position: absolute;
+    top: 50%;
+    left: 45px; /* Position it next to the square */
+    transform: translateY(-50%);
+    background-color: #484c56;
+    color: #ffffff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none; /* Ensure the label doesn't block hover effects */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow to the label */
+}
+
+.side-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(10px); /* Slight shift when hovering */
+}
+
+/* Adjust scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+
