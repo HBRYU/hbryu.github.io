@@ -265,15 +265,37 @@ hint {
     color: rgb(174, 184, 188);
 }
 
-/* Contain the gallery within the section */
+/* Styling the photo gallery container */
 .photo-gallery {
     display: flex;
-    overflow-x: auto; /* Allow horizontal scroll */
-    height: 300px; /* Set a reasonable fixed height for the images */
-    max-width: 100%; /* Make sure the gallery doesn’t stretch beyond the parent */
-    gap: 10px; /* Add some spacing between the images */
+    overflow-x: auto;
+    gap: 10px;
     padding: 10px;
-    box-sizing: border-box;
+    height: 300px; /* Adjust the height to your preference */
+    scroll-behavior: smooth;
+}
+
+/* Minimal scrollbar styling */
+.photo-gallery::-webkit-scrollbar {
+    height: 8px; /* Adjust height for horizontal scroll */
+}
+
+.photo-gallery::-webkit-scrollbar-track {
+    background: #f1f1f100; /* Light background for scrollbar track */
+}
+
+.photo-gallery::-webkit-scrollbar-thumb {
+    background-color: #888; /* Scrollbar color */
+}
+
+.photo-gallery::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Darker color on hover */
+}
+
+/* For Firefox */
+.photo-gallery {
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: #888 #f1f1f1; /* Scrollbar thumb and track colors */
 }
 
 /* Adjust the images inside the gallery */
@@ -391,4 +413,15 @@ html {
 /* Optional: Smooth transition for padding */
 .toggle-list {
     transition: max-height 0.5s ease, opacity 0.5s ease, padding 0.5s ease;
+}
+
+#transparent-section {
+    display: flex; /* Flexbox to align text and video side by side */
+    justify-content: space-between; /* Space between text and video */
+    align-items: flex-start; /* Align text and video to the top */
+    margin: 20px auto; /* Center the section */
+    width: 80%; /* Set a width for the section */
+    max-width: 1200px; /* Optional: Set a max width to prevent it from being too wide */
+    background-color: rgba(101, 101, 101, 0);
+    box-shadow: none;
 }
