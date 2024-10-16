@@ -326,7 +326,7 @@ hint {
     align-items: center;
     width: 40px; /* Adjust the width to fit the index labels */
     height: 40px; /* Adjust the height to make it square */
-    background-color: #3333337f;
+    background-color: #3333330f;
     border-radius: 10px; /* Rounded square effect */
     margin: 15px 0;
     font-family: 'JetBrainsMono', monospace; /* Set the font for the index */
@@ -388,7 +388,7 @@ html {
     display: block;
     text-align: center;
     padding: 10px 20px;
-    background-color: #101010; /* Default background color */
+    background-color: #10101086; /* Default background color */
     color: #fff; /* Default text color */
     border-radius: 5px;
     margin: 10px 0;
