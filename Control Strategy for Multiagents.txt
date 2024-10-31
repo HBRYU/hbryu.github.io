@@ -1,0 +1,19 @@
+Title: Control Strategies for Physically Simulated Characters Performing Two-player Competitive Sports
+
+2021
+
+Authors:
+    JUNGDAMWON,FacebookAIResearch, USA
+    DEEPAK GOPINATH,FacebookAIResearch, USA
+    JESSICA HODGINS,Facebook AI Research, USA
+
+Blog by HBRYU, 2024
+
+This paper focuses on training agents to perform competitive sports with human-like motion. We will divide this blog into the following sections:
+
+Index:
+    - Theoretical background and need for research
+    - Training Procedure
+    - Model Architectures
+    - Results and Analysis
+

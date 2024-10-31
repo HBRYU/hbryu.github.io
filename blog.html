@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog: Control Strategies for Physically Simulated Characters</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include MathJax for rendering LaTeX equations -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async 
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <!-- Include the blog-specific stylesheet -->
+    <link rel="stylesheet" href="blog.style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Back Button -->
+        <div class="back-button">
+            <a href="index.html">&larr; Back to Home</a>
+        </div>
+
+        <!-- Blog Content -->
+        <article>
+            <h1>Control Strategies for Physically Simulated Characters Performing Two-player Competitive Sports</h1>
+            <p><em>JUNGDAMWON, et. al., Facebook AI Research, USA, 2021.</em></p>
+
+            <div style="text-align: center;">
+                <img src="blog images/Cover.png" style="max-width: 100%; height: auto;">
+            </div>
+
+            <p><strong>Blog by Hanbie Ryu, 2024</strong><br>
+            Dept. of AI, Yonsei University</p>
+
+            <p>This paper focuses on training agents to perform competitive sports like boxing or fencing with human-like motion. Although this is directly related to my research area of interest, I'm not at a professional enough level to provide deeper insight than a brief, superficial overview. This is just my interpretation and breakdown of the research, intended for a broader audience. Enjoy!</p>
+
+            <h2>We will divide this blog into the following sections:</h2>
+            <h3>Index:</h3>
+            <ul>
+                <li><a href="#theoretical-background">Theoretical Background and Need for Research</a></li>
+                <li><a href="#training-procedure">Training Procedure</a></li>
+                <li><a href="#results-and-analysis">Results and Analysis</a></li>
+                <li><a href="#conclusion">Conclusion</a></li>
+            </ul>
+
+            <!-- Horizontal line -->
+            <hr>
+
+            <h2 id="theoretical-background">Theoretical Background and Need for Research</h2>
+
+            <h3>1. What is Reinforcement Learning?</h3>
+            <p>Reinforcement Learning (RL) is a type of machine learning where an <strong>agent</strong> learns to make decisions by taking actions in an <strong>environment</strong> to maximize cumulative rewards. Unlike supervised learning, where the model learns from labeled examples, RL learns from the consequences of actions, using trial and error to discover which actions yield the most reward.</p>
+
+            <h4>Key Components of RL:</h4>
+            <ul>
+                <li><strong>State (\( S_t \)):</strong> The current situation of the agent in the environment at time \( t \).</li>
+                <li><strong>Action (\( A_t \)):</strong> The set of possible actions the agent can take in state \( S_t \).</li>
+                <li><strong>Policy (\( \pi \)):</strong> A strategy used by the agent to decide the next action based on the current state.</li>
+                <li><strong>Reward (\( R_t \)):</strong> The immediate return received after taking an action.</li>
+                <li><strong>Value Function (\( V(s) \)):</strong> The expected cumulative future reward starting from state \( s \).</li>
+                <li><strong>Action-Value Function (Q-Value, \( Q(s, a) \)):</strong> The expected cumulative future reward starting from state \( s \), taking action \( a \), and thereafter following policy \( \pi \).</li>
+            </ul>
+
+            <h4>Policy (\( \pi \)):</h4>
+            <p>The policy is a mapping from states to probabilities of selecting each possible action. It can be deterministic or stochastic.</p>
+            <p>Deterministic Policy:
+                \[
+                \pi(s) = a
+                \]
+            </p>
+            <p>Stochastic Policy:
+                \[
+                \pi(a|s) = P[A_t = a | S_t = s]
+                \]
+            </p>
+
+            <h4>Value Function (\( V^\pi(s) \)):</h4>
+            <p>The value of a state under policy \( \pi \) is the expected return when starting from state \( s \) and following \( \pi \) thereafter:
+                \[
+                V^\pi(s) = \mathbb{E}_\pi \left[ \sum_{k=0}^\infty \gamma^k R_{t+k+1} \bigg| S_t = s \right]
+                \]
+            </p>
+            <p>where \( \gamma \) is the discount factor, \( 0 \leq \gamma \leq 1 \), which determines the importance of future rewards.</p>
+
+            <h4>Action-Value Function (\( Q^\pi(s, a) \)):</h4>
+            <p>The expected return after taking action \( a \) in state \( s \) and thereafter following policy \( \pi \):
+                \[
+                Q^\pi(s, a) = \mathbb{E}_\pi \left[ \sum_{k=0}^\infty \gamma^k R_{t+k+1} \bigg| S_t = s, A_t = a \right]
+                \]
+            </p>
+
+            <h4>Optimal Policy and Value Functions:</h4>
+            <p>The goal in RL is to find an optimal policy \( \pi^* \) that maximizes the expected return from each state:
+                \[
+                V^*(s) = \max_\pi V^\pi(s)
+                \]
+                \[
+                Q^*(s, a) = \max_\pi Q^\pi(s, a)
+                \]
+            </p>
+
+            <h3>2. Proximal Policy Optimization (PPO)</h3>
+            <p>PPO is a policy gradient method for RL that improves training stability and sample efficiency. Unlike traditional policy gradient methods, PPO uses a clipped surrogate objective to prevent large policy updates that can destabilize training.</p>
+
+            <h4>Policy Gradient Theorem:</h4>
+            <p>The policy gradient is given by:
+                \[
+                \nabla_\theta J(\theta) = \mathbb{E}_\pi \left[ \nabla_\theta \log \pi_\theta(a|s) \, A^\pi(s, a) \right]
+                \]
+            </p>
+            <p>where \( A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s) \) is the advantage function, representing how much better action \( a \) is compared to the average action at state \( s \).</p>
+
+            <h4>PPO Objective Function:</h4>
+            <p>PPO seeks to maximize the following surrogate objective:
+                \[
+                L^{CLIP}(\theta) = \mathbb{E}_t \left[ \min \left( r_t(\theta) A_t, \text{clip}(r_t(\theta), 1 - \epsilon, 1 + \epsilon) A_t \right) \right]
+                \]
+            </p>
+            <p>where:
+                \[
+                r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}
+                \]
+            </p>
+            <ul>
+                <li>\( \theta \): Current policy parameters.</li>
+                <li>\( \theta_{\text{old}} \): Policy parameters from the previous iteration.</li>
+                <li>\( \epsilon \): A hyperparameter that controls the clipping range.</li>
+                <li>\( A_t \): Advantage estimate at timestep \( t \).</li>
+            </ul>
+            <p>The clipping in the objective function prevents the new policy from deviating too much from the old policy, which helps stabilize training.</p>
+
+            <h4>Why PPO?</h4>
+            <p>PPO strikes a balance between value-based methods and policy gradient methods, offering the following advantages:</p>
+            <ul>
+                <li>Improved training stability through the clipped objective function.</li>
+                <li>Sample efficiency by reusing data from multiple epochs.</li>
+                <li>Simple implementation compared to other algorithms like Trust Region Policy Optimization (TRPO).</li>
+            </ul>
+
+            <h3>2. Training Agents to Act More "Humanly"</h3>
+            <p>The goal is to train agents that not only perform tasks effectively but also exhibit human-like motion. This is crucial in simulations and games where realistic movement enhances user experience.</p>
+            <p>The paper uses motion capture data from CMU Motion Capture Database for boxing motion training data, totaling around 90 seconds.</p>
+            <h3>3. Competitive Agents</h3>
+            <p>Training agents for competitive environments introduces additional challenges, as having multiple competing agents means the agent's target is non-stationary.</p>
+            
+            <!-- Horizontal line -->
+            <hr>
+
+            <h2 id="training-procedure">Training Procedure</h2>
+
+            <div style="text-align: center;">
+                <img src="blog images/System Overview.png" style="max-width: 100%; height: auto;">
+            </div>
+
+            <p>This research uses a two-step approach:</p>
+            <ol>
+                <li><strong>Pre-training Phase:</strong> Trains the agent to behave like the experts from the motion-capture training data.</li>
+                <li><strong>Transfer Learning Phase:</strong> Trains the model to maximize competitive rewards, such as scores and penalties in boxing.</li>
+            </ol>
+
+            <p>We copy only the motor decoder part of the policy when transitioning to the Transfer Learning Phase.</p>
+
+            <div style="text-align: center;">
+                <img src="blog images/Policy Model.png" style="max-width: 60%; height: auto;">
+            </div>
+
+            <p>The agent's state is composed of:</p>
+            <ul>
+                <li><strong>Body State:</strong> Holds the current positions, velocities, and angular velocities of every joint in the body.</li>
+                <li><strong>Task-Specific State:</strong> Contains different, appropriate states for each training phase.</li>
+            </ul>
+
+            <p>The motor decoder provides a set of outputs from the experts:</p>
+            <p>
+                \[
+                e_t = \left( e_t^1, e_t^2, \dots, e_t^N \right)
+                \]
+            </p>
+
+            <p>The task encoder receives the whole observed state as input and generates expert weights:</p>
+            <p>
+                \[
+                \omega_t = \left( \omega_t^1, \omega_t^2, \dots, \omega_t^N \right)
+                \]
+            </p>
+
+            <p>The weights are updated in an autoregressive manner to ensure smooth transitions:</p>
+            <p>
+                \[
+                \hat{\omega}_t = (1 - \alpha) \omega_t + \alpha \hat{\omega}_{t-1}
+                \]
+            </p>
+            <p>where \( \alpha \) controls the smoothness of the weight change.</p>
+
+            <p>The mean action \( \mu_t \) is computed as a weighted sum of the experts’ outputs:</p>
+            <p>
+                \[
+                \mu_t = \sum_{i=1}^N \hat{\omega}_t^i e_t^i
+                \]
+            </p>
+
+            <p>The final action \( a_t \) is sampled from a Gaussian distribution with mean \( \mu_t \) and covariance \( \Sigma \):</p>
+            <p>
+                \[
+                a_t \sim \mathcal{N}(\mu_t, \Sigma)
+                \]
+            </p>
+            <p>where \( \Sigma \) is a constant diagonal matrix representing the covariance.</p>
+
+
+            <p>In other words, the Motor Decoder produces expert motions that would follow the current state of the body, and the Task Encoder creates a combination of those motions, which is key in creating realistic movements for a given task.</p>
+
+            <h3>Pre-training Phase</h3>
+            <p>The task-specific state holds motion sequences 0.05s and 0.15s into the future, with imitation rewards encouraging the agent to imitate the training motion data, producing realistic human-like movement.</p>
+            
+            <h3>Transfer Learning Phase</h3>
+
+            <div style="text-align: center;">
+                <img src="blog images/Task-specific State.png" style="max-width: 60%; height: auto;">
+            </div>
+
+            <p>The task-specific state holds relative target positions of the opponent agent and other variables needed to maximize competitive rewards.</p> 
+            <p>
+                \[
+                g_t = (p_{\text{arena}}, d_{\text{arena}}, p_{\text{op}}, v_{\text{op}}, p_{\text{glove}}, v_{\text{glove}}, p_{\text{target}}, v_{\text{target}})
+                \]
+            </p>
+            <p>The rewards here are a weighted sum of:</p>
+            <ul>
+                <li><strong>Match Rewards:</strong> Calculates the normal force of the punches between each agent and computes the force applied to the opponent minus from the agent.</li>
+                <li><strong>Closeness Rewards:</strong> Encourages the agents to be close to each other, increasing the likelihood of competitive action occurring.</li>
+                <li><strong>Facing Rewards:</strong> Encourages the agents to face each other. Without this, agents might punch each other in the back, which rarely happens in real life.</li>
+                <li><strong>Energy Rewards:</strong> Penalizes excessive motor use, encouraging the agents to move more efficiently.</li>
+                <li><strong>Various Penalties:</strong> Terminates the episode if one of the agents loses balance and falls to the ground, or if the agents get stuck between each other or on the ropes.</li>
+            </ul>
+
+            <p>Reward function:</p>
+            <p>
+                \[
+                r = r_{match} + w_{close} r_{close} + w_{facing} r_{facing} - w_{energy} r_{energy} - w_{penalty} \sum_{i} r^{i}_{penalty}
+                \]
+            </p>
+
+            <p>where:</p>
+            <ul>
+                <li>\( r_{match} \):</li>
+                <p>
+                    \[
+                    r_{match} = \| f_{pl \rightarrow op} \| - \| f_{op \rightarrow pl} \|
+                    \]
+                </p>
+                <li>\( r_{close} \):</li>
+                <p>    
+                    \[
+                    r_{close} = \exp(-3d^2)
+                    \]
+                </p>
+                
+                <li>\( r_{facing} \):</li>
+                <p>
+                    \[
+                    r_{facing} = \exp(-5\| \bar{v} \cdot \hat{v} - 1 \|)
+                    \]
+                </p>
+                <li>\( r_{energy} \):</li>
+                <p>
+                    \[
+                    r_{energy} = \kappa_{dist} \sum_{j} \| a_j \|^2
+                    \]
+                </p>
+                <p>
+                    \[
+                    \kappa_{dist} = 1 - \exp(-50\| \max(0, l - 1) \|^2)
+                    \]
+                </p>
+                <li>\( r^{i}_{penalty} \):</li>
+                <p>
+                    \[
+                    r^{i}_{penalty} = 
+                    \begin{cases} 
+                        1 & \text{if the condition is satisfied} \\ 
+                        0 & \text{otherwise} 
+                    \end{cases}
+                    \]
+                </p>
+            </ul>
+
+            <p>In transitioning from the Pre-training Phase to the Transfer Learning Phase, only the Motor Decoder is reused. This means it still produces human-like expert motions that follow a given body state, and only the weights for their combination are reinitialized.</p>
+
+            <p>The Task Encoder is then trained with an opponent agent, learning to adaptively weigh the expert actions generated by the Motor Decoder based on the competitive context. It computes a set of weights for each expert action, emphasizing particular movements (e.g., attacking, dodging, blocking) depending on the opponent’s location and posture.</p>
+
+            <p>In essence, the Task Encoder serves as a strategic component, dynamically adapting the expert motions produced by the Motor Decoder to match real-time competitive needs, ensuring that each movement looks both realistic and purpose-driven.</p>
+
+            <h2>Preserving Movement Style During Competitive Optimization</h2>
+
+            <div style="text-align: center;">
+                <img src="blog images/Training Methods.png" style="max-width: 100%; height: auto;">
+            </div>
+
+            <p>The Motor Decoder provides important motor information to the agent, but it may not be optimized for the task, leading to suboptimal results when the Motor Decoder parameters are fixed during Transfer Learning (<em>Enc-only</em>).</p>
+
+            <p>On the other hand, if the Motor Decoder parameters are optimized together with the Task Encoder parameters (<em>Enc-Dec-e2e</em>), it could lead to maximal competitive rewards, but the learned expert movements might be "forgotten" during optimization.</p>
+
+            <p>This is why, in the research, they alternate between <em>Enc-only</em> and <em>Enc-Dec-e2e</em> learning to preserve the pre-trained movements during competitive optimization. Specifically, they start with <em>Enc-only</em> for 300-500 iterations, then alternate every 50 iterations. This alternating training method provides a fine balance between movement preservation and task optimization.</p>
+
+            <!-- Horizontal line -->
+            <hr>
+
+            <h2 id="results-and-analysis">Results and Analysis</h2>
+
+            <div style="text-align: center;">
+                <img src="blog images/Parameters.png" style="max-width: 60%; height: auto;"><img src="blog images/Boxing Rewards.png" style="max-width: 60%; height: auto;">
+            </div>
+
+            <p>Since the agents have competitive rewards, we can expect them to follow a sort of zero-sum game. From the paper's observation, we divide the training curve into 5 stages:</p>
+            <ul>
+                <li><strong>Stage 1:</strong> Cumulative rewards increase as the agents learn to stand up correctly.</li>
+                <li><strong>Stage 2:</strong> Unintended collisions occur.</li>
+                <li><strong>Stage 3:</strong> Agents develop punching abilities; rewards decrease towards zero.</li>
+                <li><strong>Stage 4:</strong> Agents develop blocking and avoiding punches; rewards bounce back.</li>
+                <li><strong>Stage 5:</strong> Fluctuates between Stage 3 and 4.</li>
+            </ul>
+
+            <p>At Stage 5, the paper judges that the policy <em>converges</em> when the match rewards are around zero during this stage.</p>
+
+            <div style="text-align: center;">
+                <img src="blog images/Boxing Demo.png" style="max-width: 100%; height: auto;">
+            </div>
+            
+            <p>Similar results are shown in fencing, where the agents learned to strike the opponent and make counter attacks.</p>
+            
+            <hr>
+
+            <h2 id="conclusion">Conclusion</h2>
+
+            <p>This paper illustrates the effectiveness of combining a <strong>Pre-training Phase</strong> with a <strong>Transfer Learning Phase</strong> to train agents with realistic, adaptive, and competitive behaviors.</p>
+
+            <ol>
+                <li><strong>Realistic Motion:</strong> The two-phase approach enables agents to produce lifelike movements through pre-training on motion capture data, enhanced by autoregressive smoothing in the Task Encoder.</li>
+                <li><strong>Adaptive Competitive Behavior:</strong> In the Transfer Learning Phase, agents dynamically adjust actions based on opponent movements, balancing offense and defense with strategic depth.</li>
+                <li><strong>Diverse Styles:</strong> By tuning expert weights, the Task Encoder enables varied movement styles, allowing agents to adopt distinct strategies, enhancing realism in competitive settings.</li>
+                <li><strong>Quantitative Gains:</strong> Metrics like competitive rewards improved significantly post-transfer learning, showcasing the model’s effectiveness compared to baseline models without pre-training.</li>
+                <li><strong>Challenges:</strong> Agents faced limitations with unexpected opponent behavior, highlighting areas for reward structure tuning to balance aggression and defense.</li>
+                <li><strong>Broader Applicability:</strong> The framework’s potential extends to simulations and games, offering human-like animations and behaviors for interactive sports and training scenarios.</li>
+            </ol>
+
+            <p>In conclusion, this research demonstrates that integrating imitation learning with reinforcement learning produces competitive agents with fluid and nuanced behaviors, offering valuable applications in fields that require adaptive, realistic virtual characters.</p>
+
+            <!-- Horizontal line -->
+            <hr>
+
+
+        </article>
+
+        <!-- Back Button at the Bottom -->
+        <div class="back-button">
+            <a href="index.html">&larr; Back to Home</a>
+        </div>
+    </div>
+
+</body>
+</html>
