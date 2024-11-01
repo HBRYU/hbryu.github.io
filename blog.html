@@ -15,10 +15,46 @@
             svg: { fontCache: 'global' }
         };
     </script>
+    <!-- Include Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Include the blog-specific stylesheet -->
     <link rel="stylesheet" href="blog.style.css">
 </head>
 <body>
+
+    <!-- Sidebar Navigation -->
+    <div class="side-nav">
+        <a href="#theoretical-background" class="dot" data-label="Theoretical Background">[1]</a>
+        <a href="#training-procedure" class="dot" data-label="Training Procedure">[2]</a>
+        <a href="#preserving-movement-style" class="dot" data-label="Preserving Movement Style">[3]</a>
+        <a href="#results-and-analysis" class="dot" data-label="Results and Analysis">[4]</a>
+        <a href="#conclusion" class="dot" data-label="Conclusion">[5]</a>
+    </div>
+
+    <!-- Smooth Scrolling Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.side-nav a');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    const yOffset = -20; // Adjust this value to set the distance from the top
+                    const yPosition = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    
+                    window.scrollTo({
+                        top: yPosition,
+                        behavior: 'smooth' // Smooth scroll behavior
+                    });
+                });
+            });
+        });
+    </script>
 
     <div class="container">
         <!-- Back Button -->
@@ -29,7 +65,9 @@
         <!-- Blog Content -->
         <article>
             <h1>Control Strategies for Physically Simulated Characters Performing Two-player Competitive Sports</h1>
-            <p><em>JUNGDAMWON, et. al., Facebook AI Research, USA, 2021.</em></p>
+            <p><em>Jungdam Won, et. al., Facebook AI Research, USA, 2021.</em></p>
+            <a href="https://dl.acm.org/doi/10.1145/3450626.3459761">ACM Digital Archive</a><br>
+            <a href="Control Strategies for Physically Simulated Characters Performing Two-player Competitive Sports.pdf">Direct PDF</a>
 
             <div style="text-align: center;">
                 <img src="blog images/Cover.png" style="max-width: 100%; height: auto;">
@@ -38,23 +76,44 @@
             <p><strong>Blog by Hanbie Ryu, 2024</strong><br>
             Dept. of AI, Yonsei University</p>
 
-            <p>This paper focuses on training agents to perform competitive sports like boxing or fencing with human-like motion. Although this is directly related to my research area of interest, I'm not at a professional enough level to provide deeper insight than a brief, superficial overview. This is just my interpretation and breakdown of the research, intended for a broader audience. Enjoy!</p>
+            <p>This paper demonstrates a novel training method for agents to perform competitive sports like boxing or fencing with human-like motion. Although this is directly related to my research area of interest, I'm not at a professional enough level to provide deeper insight than a brief, superficial overview. This is just my interpretation and breakdown of the research, intended for a broader audience. Enjoy!</p>
+
+            <br>
+            <p>Ps, <a href="https://www.youtube.com/watch?v=SsJ_AusntiU">Two-Minitue-Papers</a> on YouTube did a fantastic review of this paper, showcasing the training results in depth.</p>
+            <br>
 
             <h2>We will divide this blog into the following sections:</h2>
             <h3>Index:</h3>
             <ul>
-                <li><a href="#theoretical-background">Theoretical Background and Need for Research</a></li>
-                <li><a href="#training-procedure">Training Procedure</a></li>
-                <li><a href="#results-and-analysis">Results and Analysis</a></li>
-                <li><a href="#conclusion">Conclusion</a></li>
+                <li><a href="#theoretical-background">1. Theoretical Background and Need for Research</a>
+                    <ul>
+                        <li><a href="#what-is-rl">1.1 What is Reinforcement Learning?</a></li>
+                        <li><a href="#ppo">1.2 Proximal Policy Optimization (PPO)</a></li>
+                        <li><a href="#training-agents">1.3 Training Agents to Act More "Humanly"</a></li>
+                        <li><a href="#competitive-agents">1.4 Competitive Agents</a></li>
+                    </ul>
+                </li>
+                <li><a href="#training-procedure">2. Training Procedure</a>
+                    <ul>
+                        <li><a href="#pre-training-phase">2.1 Pre-training Phase</a></li>
+                        <li><a href="#transfer-learning-phase">2.2 Transfer Learning Phase</a></li>
+                    </ul>
+                </li>
+                <li><a href="#preserving-movement-style">3. Preserving Movement Style During Competitive Optimization</a></li>
+                <li><a href="#results-and-analysis">4. Results and Analysis</a></li>
+                <li><a href="#conclusion">5. Conclusion</a></li>
             </ul>
 
             <!-- Horizontal line -->
             <hr>
 
-            <h2 id="theoretical-background">Theoretical Background and Need for Research</h2>
+            <h2 id="theoretical-background">1. Theoretical Background and Need for Research</h2>
 
-            <h3>1. What is Reinforcement Learning?</h3>
+            <h3 id="what-is-rl">1.1 What is Reinforcement Learning?</h3>
+            <div style="text-align: center;">
+                <img src="blog images/Atari.gif" style="max-width: 50%; height: auto;"><br>
+                <a href="https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf">Source: Google Deepmind, 2013</a>
+            </div>
             <p>Reinforcement Learning (RL) is a type of machine learning where an <strong>agent</strong> learns to make decisions by taking actions in an <strong>environment</strong> to maximize cumulative rewards. Unlike supervised learning, where the model learns from labeled examples, RL learns from the consequences of actions, using trial and error to discover which actions yield the most reward.</p>
 
             <h4>Key Components of RL:</h4>
@@ -105,8 +164,14 @@
                 \]
             </p>
 
-            <h3>2. Proximal Policy Optimization (PPO)</h3>
-            <p>PPO is a policy gradient method for RL that improves training stability and sample efficiency. Unlike traditional policy gradient methods, PPO uses a clipped surrogate objective to prevent large policy updates that can destabilize training.</p>
+            <h3 id="ppo">1.2 Proximal Policy Optimization (PPO)</h3>
+            <p>Proximal Policy Optimization (PPO) is a reinforcement learning algorithm that optimizes policies using gradient ascent while preventing large, destabilizing updates by clipping changes to stay within a safe range. This approach ensures each policy update is close to the previous one, enhancing training stability and efficiency.</p>
+            <p>This research used PPO for training agents in high dimensional, continuous spaces. So, how does it work?</p>
+
+            <div style="text-align: center;">
+                <img src="blog images/PPO pseudo.png" style="max-width: 50%; height: auto;"><br>
+                <a href="https://arxiv.org/pdf/1707.06347">Source: John Schulman, et.al., OpenAI, 2017</a>
+            </div>
 
             <h4>Policy Gradient Theorem:</h4>
             <p>The policy gradient is given by:
@@ -134,7 +199,7 @@
                 <li>\( A_t \): Advantage estimate at timestep \( t \).</li>
             </ul>
             <p>The clipping in the objective function prevents the new policy from deviating too much from the old policy, which helps stabilize training.</p>
-
+            <p>The authors utilized DDPPO (Distributed, Decentralized PPO) for computation and resource efficiency.</p>
             <h4>Why PPO?</h4>
             <p>PPO strikes a balance between value-based methods and policy gradient methods, offering the following advantages:</p>
             <ul>
@@ -143,16 +208,17 @@
                 <li>Simple implementation compared to other algorithms like Trust Region Policy Optimization (TRPO).</li>
             </ul>
 
-            <h3>2. Training Agents to Act More "Humanly"</h3>
+            <h3 id="training-agents">1.3 Training Agents to Act Realistically</h3>
             <p>The goal is to train agents that not only perform tasks effectively but also exhibit human-like motion. This is crucial in simulations and games where realistic movement enhances user experience.</p>
             <p>The paper uses motion capture data from CMU Motion Capture Database for boxing motion training data, totaling around 90 seconds.</p>
-            <h3>3. Competitive Agents</h3>
+
+            <h3 id="competitive-agents">1.4 Competitive Agents</h3>
             <p>Training agents for competitive environments introduces additional challenges, as having multiple competing agents means the agent's target is non-stationary.</p>
             
             <!-- Horizontal line -->
             <hr>
 
-            <h2 id="training-procedure">Training Procedure</h2>
+            <h2 id="training-procedure">2. Training Procedure</h2>
 
             <div style="text-align: center;">
                 <img src="blog images/System Overview.png" style="max-width: 100%; height: auto;">
@@ -216,10 +282,10 @@
 
             <p>In other words, the Motor Decoder produces expert motions that would follow the current state of the body, and the Task Encoder creates a combination of those motions, which is key in creating realistic movements for a given task.</p>
 
-            <h3>Pre-training Phase</h3>
+            <h3 id="pre-training-phase">2.1 Pre-training Phase</h3>
             <p>The task-specific state holds motion sequences 0.05s and 0.15s into the future, with imitation rewards encouraging the agent to imitate the training motion data, producing realistic human-like movement.</p>
             
-            <h3>Transfer Learning Phase</h3>
+            <h3 id="transfer-learning-phase">2.2 Transfer Learning Phase</h3>
 
             <div style="text-align: center;">
                 <img src="blog images/Task-specific State.png" style="max-width: 60%; height: auto;">
@@ -236,7 +302,7 @@
                 <li><strong>Match Rewards:</strong> Calculates the normal force of the punches between each agent and computes the force applied to the opponent minus from the agent.</li>
                 <li><strong>Closeness Rewards:</strong> Encourages the agents to be close to each other, increasing the likelihood of competitive action occurring.</li>
                 <li><strong>Facing Rewards:</strong> Encourages the agents to face each other. Without this, agents might punch each other in the back, which rarely happens in real life.</li>
-                <li><strong>Energy Rewards:</strong> Penalizes excessive motor use, encouraging the agents to move more efficiently.</li>
+                <li><strong>Energy Rewards:</strong> Penalizes excessive motor use, encouraging the agents to move more efficiently (although, it is noted that removing this term leads to more dynamic and entertaining results) .</li>
                 <li><strong>Various Penalties:</strong> Terminates the episode if one of the agents loses balance and falls to the ground, or if the agents get stuck between each other or on the ropes.</li>
             </ul>
 
@@ -297,7 +363,10 @@
 
             <p>In essence, the Task Encoder serves as a strategic component, dynamically adapting the expert motions produced by the Motor Decoder to match real-time competitive needs, ensuring that each movement looks both realistic and purpose-driven.</p>
 
-            <h2>Preserving Movement Style During Competitive Optimization</h2>
+            <!-- Horizontal line -->
+            <hr>
+
+            <h2 id="preserving-movement-style">3. Preserving Movement Style During Competitive Optimization</h2>
 
             <div style="text-align: center;">
                 <img src="blog images/Training Methods.png" style="max-width: 100%; height: auto;">
@@ -312,7 +381,7 @@
             <!-- Horizontal line -->
             <hr>
 
-            <h2 id="results-and-analysis">Results and Analysis</h2>
+            <h2 id="results-and-analysis">4. Results and Analysis</h2>
 
             <div style="text-align: center;">
                 <img src="blog images/Parameters.png" style="max-width: 60%; height: auto;"><img src="blog images/Boxing Rewards.png" style="max-width: 60%; height: auto;">
@@ -332,12 +401,25 @@
             <div style="text-align: center;">
                 <img src="blog images/Boxing Demo.png" style="max-width: 100%; height: auto;">
             </div>
+
+            <div style="text-align: center;">
+                <img src="blog images/Boxing.gif" style="max-width: 100%; height: auto;">
+            </div>
+
+            <p>The agents are shown to successfully throw jabs at the oponent at 1B steps.</p>
             
             <p>Similar results are shown in fencing, where the agents learned to strike the opponent and make counter attacks.</p>
             
+            <p>Additionally, the researchers also tried different movement experts, this one mimicing gorillas</p>
+
+            <div style="text-align: center;">
+                <img src="blog images/Gorillas.gif" style="max-width: 100%; height: auto;">
+            </div>
+
+            <!-- Horizontal line -->
             <hr>
 
-            <h2 id="conclusion">Conclusion</h2>
+            <h2 id="conclusion">5. Conclusion</h2>
 
             <p>This paper illustrates the effectiveness of combining a <strong>Pre-training Phase</strong> with a <strong>Transfer Learning Phase</strong> to train agents with realistic, adaptive, and competitive behaviors.</p>
 

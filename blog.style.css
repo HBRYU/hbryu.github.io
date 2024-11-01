@@ -1,8 +1,24 @@
+/* General body and layout styles */
+@font-face {
+    font-family: 'JetBrainsMono';
+    src: url('fonts/JetBrainsMono-Light.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NotoSansKR';
+    src: url('fonts/NotoSansKR-VariableFont_wght.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
     margin: 20px;
     line-height: 1.6;
-    color: #333;
+    color: black;
+    background-color: white;
 }
 
 .container {
@@ -29,9 +45,10 @@ article {
 }
 
 h1, h2, h3 {
-    color: #333;
+    color: black;
     margin-top: 1em;
     margin-bottom: 0.5em;
+    font-family: 'Roboto', sans-serif;
 }
 
 h1 {
@@ -87,6 +104,69 @@ hr {
     margin: 2em 0;
 }
 
+/* Sidebar Navigation Styles */
+.side-nav {
+    position: fixed;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1000;
+}
+
+.side-nav a {
+    display: block;
+    margin: 7px 0;
+    text-decoration: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.side-nav a:hover {
+    color: #007BFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.side-nav a.dot {
+    width: 30px;
+    height: 30px;
+    background-color: #000000;
+    text-align: center;
+    line-height: 30px;
+    color: #fff;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s ease;
+    position: relative;
+}
+
+.side-nav a.dot:hover {
+    background-color: #0056b3;
+    transform: scale(110%);
+}
+
+.side-nav a.dot::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    background-color: rgb(255, 255, 255);
+    color: #000000;
+    border: 1px solid #000000;
+    padding: 3px 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.side-nav a.dot:hover::after {
+    opacity: 1;
+}
+
+/* Media Queries */
 @media (max-width: 600px) {
     body {
         margin: 10px;
@@ -102,5 +182,30 @@ hr {
 
     h3 {
         font-size: 1.1em;
+    }
+
+    /* Hide sidebar on small screens */
+    .side-nav {
+        display: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background-color: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .container {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    /* Hide navigation or other non-essential elements */
+    .back-button, .side-nav {
+        display: none;
     }
 }
