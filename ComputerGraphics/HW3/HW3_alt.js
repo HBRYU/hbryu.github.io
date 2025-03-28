@@ -187,8 +187,7 @@ function setupMouseEvents() {
                     // 원의 중심점 설정
             center = [glX, glY];
             isDrawing = true;
-            updateText(textOverlay, `Circle center: (${glX.toFixed(2)}, ${glY.toFixed(2)})`);
-            updateText(textOverlay2, "Drag to set circle radius");
+            // updateText(textOverlay2, "Drag to set circle radius");
         } else if (mode === 'line' && !line) {
             // 기존 선분 그리기 로직
             startPoint = [glX, glY];
@@ -230,7 +229,8 @@ function setupMouseEvents() {
             // 원 그리기 완료
             mode = 'line';
             isDrawing = false;
-            updateText(textOverlay2, "Draw line segment");
+            updateText(textOverlay, `Circle center: (${center[0].toFixed(2)}, ${center[1].toFixed(2)})`);
+            // updateText(textOverlay2, "Draw line segment");
         } else if (isDrawing && mode === 'line' && tempEndPoint) {
             // 선분 그리기 로직 (기존과 동일)
             line = [...startPoint, ...tempEndPoint];
@@ -342,9 +342,9 @@ async function main() {
         shader.use();
 
         // 텍스트 초기화
-        textOverlay = setupText(canvas, "No line segment", 1);
-        textOverlay2 = setupText(canvas, "Click mouse button and drag to draw line segments", 2);
-        textOverlay3 = setupText(canvas, "Waiting for input", 3);
+        textOverlay = setupText(canvas, " ", 1);
+        textOverlay2 = setupText(canvas, " ", 2);
+        textOverlay3 = setupText(canvas, " ", 3);
 
         // 마우스 이벤트 설정
         setupMouseEvents();
