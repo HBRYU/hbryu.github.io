@@ -153,9 +153,9 @@ let carPositionInterval = setInterval(() => {
 const carPositionTimeout = setTimeout(() => {
     clearInterval(carPositionInterval);
     console.warn('Position timeout – forcing default');
-    car.object.position.set(0, 0.5, 0);
+    car.object.position.set(-4.68, -0.32, -31);
     if (car.modelLoaded) car.alignWithGround();
-}, 5000); // 5 second timeout
+}, 12000); // 5 second timeout
 
 
 // CameraControl import and usage
