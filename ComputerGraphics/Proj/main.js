@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { Entity } from './entity.js';
-import { context, updateLightingForCamera } from './init.js';
+import { context } from './init.js';
 import { createPostProcessing } from './postProcessing.js';
 
 // unwrap context for readability
@@ -83,7 +83,7 @@ function animate() {
             entity.Update(deltaTime);
         }
     }    // Update lighting to follow camera
-    updateLightingForCamera(context.camera.position);
+    // updateLightingForCamera(context.camera.position);
     
     // Render with post-processing or fallback to direct rendering
     if (composer) {

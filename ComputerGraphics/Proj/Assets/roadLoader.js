@@ -1,11 +1,12 @@
-// Road loader for PseudoEngine - loads Road.json scene
+// Road loader for PseudoEngine - loads scene.glb file
 import * as THREE from 'three';
 import { Entity } from '../entity.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export class RoadLoader extends Entity {
-    constructor(name, jsonPath, scene = null) {
+    constructor(name, glbPath, scene = null) {
         super(name);
-        this.jsonPath = jsonPath;
+        this.glbPath = glbPath;
         this.scene = scene;
         this.isLoaded = false;
         this.startPosition = null;
@@ -13,29 +14,21 @@ export class RoadLoader extends Entity {
         this.trackConfig = null;
         this.textureLoader = new THREE.TextureLoader();
         this.loadedTextures = new Map();
-    }
-
-    // Replace both Init() and loadTrackConfig() with one async Init():
+    }    // Replace both Init() and loadTrackConfig() with one async Init():
     async Init() {
-        try {
-            // 1) fetch both the road-scene JSON and your texture config in parallel
-            const [sceneData, cfg] = await Promise.all([
-                fetch(this.jsonPath).then(r => r.json()),
-                fetch('./Assets/TrackWTrees.json').then(r => r.json())
-            ]);
-            this.trackConfig = cfg;
+    try {
+        // Load GLB file with GLTFLoader (not fetch)
+        const gltfLoader = new GLTFLoader();
+        const gltf = await gltfLoader.loadAsync(this.glbPath);
 
-            // 2) preload all textures
-            await this.preloadTexturesFromConfig();
+        // Build the scene from gltf.scene (materials/textures already embedded)
+        this.loadScene(gltf.scene);
 
-            // 3) build the scene, apply materials/textures, add to this.scene
-            this.loadScene(sceneData);
-
-            console.log('RoadLoader: Scene loaded successfully');
-        } catch (err) {
-            console.error('RoadLoader.Init failed:', err);
-        }
+        console.log('RoadLoader: GLB Scene loaded successfully');
+    } catch (err) {
+        console.error('RoadLoader.Init failed:', err);
     }
+}
 
     // Pre-load textures from the new TrackTexture3.json format
     async preloadTexturesFromConfig() {
@@ -150,19 +143,22 @@ export class RoadLoader extends Entity {
             // Apply side rendering if specified
             if (materialConfig.side !== undefined) {
                 material.side = materialConfig.side;
-            }
-
-            material.needsUpdate = true;
+            }            material.needsUpdate = true;
         });
-    } loadScene(data) {
-        const loader = new THREE.ObjectLoader();
-        const loadedScene = loader.parse(data);
+    }
+
+    loadScene(gltfScene) {
+        // Use the GLTF scene directly instead of ObjectLoader
+        const loadedScene = gltfScene;
 
         this.object = new THREE.Group();
         this.object.name = this.name;
 
+        // Force world matrices to be correct
+        loadedScene.updateMatrixWorld(true);
+
         loadedScene.traverse((child) => {
-            if (!child.isMesh) return;
+            // if (!child.isMesh) return;
 
             const worldPos = new THREE.Vector3();
             const worldQuat = new THREE.Quaternion();
@@ -195,7 +191,30 @@ export class RoadLoader extends Entity {
             mesh.scale.copy(worldScale);
             if(child.name === 'Plane') {
                 this.alignMeshToGround(mesh);
+                console.log("plane");
             }
+            else if(child.name.toLowerCase().includes('rock')) {
+                // align road pieces to ground
+                mesh.castShadow = true;
+                mesh.position.y = 0; // align rock to ground
+            }
+            // else if(child.name.includes('Material2_17')){
+            //     // Add downward pointing spot light
+            //     const spotLight = new THREE.SpotLight(0xffffff, 5);
+            //     spotLight.position.copy(child.position);
+            //     spotLight.target.position.copy(child.position);
+            //     spotLight.target.position.y -= 10; // Point downward
+            //     spotLight.angle = Math.PI / 6; // 30 degree cone
+            //     spotLight.penumbra = 0.1; // soft edges
+            //     spotLight.decay = 2; // realistic light falloff
+            //     spotLight.distance = 10; // light range
+            //     spotLight.castShadow = true;
+                
+            //     // Add both the light and its target to the scene
+            //     this.object.add(spotLight);
+            //     this.object.add(spotLight.target);
+            //     console.log("Added spot light to Material2_17");
+            // }
             else{
                 //set material to caset shadow
                 mesh.castShadow = true;

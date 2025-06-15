@@ -5,32 +5,32 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Inherit from Entity to create a controllable box
 export class Car extends Entity {
-    constructor(name) {
+    constructor(name) { // glbPath removed as it's consistent
         super(name);
 
         // Physics properties
         this._velocity = new THREE.Vector2(0, 0);
         this._angularVelocity = 0;
 
-        // Car performance specs - UPDATED FOR BETTER CONTROL
+        // Car performance specs
         this.maxSpeed = 80;
-        this.engineForce = 12000;   // Reduced slightly for better control
+        this.engineForce = 8000;
         this.brakeForce = 120000;
-        // Physical properties - UPDATED FOR STABILITY
+        // Physical properties
         this.mass = 1800;
-        this.momentOfInertia = 2500; // Increased for more stability
-        this.dragCoefficient = 0.55; // Increased for more realistic air resistance
+        this.momentOfInertia = 3000;
+        this.dragCoefficient = 0.55;
 
-        // Tire properties - UPDATED FOR BETTER GRIP
-        this.tireFriction = 0.99;     // Slightly reduced for more realistic sliding
-        this.tireGrip = 0.99;         // Reduced from 0.99 for more progressive sliding
-        this.corneringStiffness = 250000; // Reduced for less aggressive cornering
+        // Tire properties
+        this.tireFriction = 0.99;
+        this.tireGrip = 0.99;
+        this.corneringStiffness = 250000;
 
-        // NEW: Stability control properties
-        this.stabilityControl = true;  // Enable electronic stability control
-        this.maxSlipAngle = 0.3;      // Maximum slip angle before stability kicks in (radians ~17 degrees)
-        this.stabilityFactor = 0.2;   // How much stability control reduces forces (0-1)
-        this.antiSpinDamping = 0.5;  // Additional angular velocity damping during slides
+        // Stability control properties
+        this.stabilityControl = true;
+        this.maxSlipAngle = 0.3;
+        this.stabilityFactor = 0.2;
+        this.antiSpinDamping = 0.5;
 
         // Input state
         this.accelPressed = false;
@@ -38,7 +38,13 @@ export class Car extends Entity {
         this.leftPressed = false;
         this.rightPressed = false;
         this.modelLoaded = false;
-        this.modelScale = new THREE.Vector3(1, 1, 1); // Default scale
+        this.modelScale = new THREE.Vector3(1, 1, 1);
+
+        // Headlight properties
+        this.headlights = []; // Store headlight objects
+        this.headlightHelpers = []; // Store SpotLightHelper objects
+        this.headlightsOn = true; // Start with headlights on
+        this.manuallyToggledHeadlights = false; // Track if user manually toggled
 
         // Create a group to hold the model
         this.object = new THREE.Group();
@@ -78,6 +84,10 @@ export class Car extends Entity {
                     break;
                 case 'c': // Toggle stability control
                     this.toggleStabilityControl();
+                    break;
+                case 'l': // Toggle headlights
+                case 'L':
+                    this.toggleHeadlights();
                     break;
                 case '1': // Stable setup
                     this.setDriftSensitivity(0.2);
@@ -173,23 +183,28 @@ export class Car extends Entity {
                 // Add the entire model to our group
                 this.object.add(carModel);
 
+                // Create and add headlights
+                this.createHeadlights(); // Called after model is scaled and added
+
                 // Add simple indicators for front/back (positioned relative to Object001 if available)
                 const frontIndicator = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.1, 0.05, 0.02),
+                    new THREE.BoxGeometry(0.1 * this.modelScale.x, 0.05 * this.modelScale.y, 0.02 * this.modelScale.z), // Scale indicator
                     new THREE.MeshBasicMaterial({ color: 0xff0000 })
                 );
 
                 // Position indicator at front of Object001 if available, otherwise use default
                 if (this.mainBodyMesh) {
-                    const box = new THREE.Box3().setFromObject(this.mainBodyMesh);
-                    frontIndicator.position.z = box.max.z + 0.1; // Slightly in front
-                    frontIndicator.position.y = box.max.y * 0.8; // Near top
+                    const box = new THREE.Box3().setFromObject(this.mainBodyMesh); // Bbox of unscaled model part
+                    frontIndicator.position.z = (box.max.z + 0.1) * this.modelScale.z; // Slightly in front, scaled
+                    frontIndicator.position.y = (box.max.y * 0.8) * this.modelScale.y; // Near top, scaled
                 } else {
-                    frontIndicator.position.z = 1;
-                    frontIndicator.position.y = 0.3;
+                    // Fallback for indicator if mainBodyMesh not found (should not happen with current logic)
+                    frontIndicator.position.z = 1 * this.modelScale.z;
+                    frontIndicator.position.y = 0.3 * this.modelScale.y;
                 }
 
                 this.object.add(frontIndicator);
+
 
                 // Create debug arrows
                 this.createDebugArrows();
@@ -202,70 +217,12 @@ export class Car extends Entity {
             },
             (error) => {
                 console.error('Error loading car model:', error);
-                console.log('Falling back to simple box geometry');
-
-                // Fallback: create the original simple box
-                const geometry = new THREE.BoxGeometry(1, 0.5, 2);
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0x3366cc,
-                    metalness: 0.5,
-                    roughness: 0.5
-                });
-
-                const boxMesh = new THREE.Mesh(geometry, material);
-                boxMesh.castShadow = true;
-                boxMesh.receiveShadow = true;
-
-                // Store fallback mesh as main body
-                this.mainBodyMesh = boxMesh;
-                this.physicsSize = { width: 1, height: 0.5, length: 2 };
-
-                this.object.add(boxMesh);
-                this.object.position.y = 0.0;
-
-                // Add front indicator
-                const frontIndicator = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.5, 0.1, 0.1),
-                    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-                );
-                frontIndicator.position.z = 1;
-                frontIndicator.position.y = 0.3;
-                this.object.add(frontIndicator);
-
-                this.createDebugArrows();
-                this.modelLoaded = true;
+                // Fallback logic removed. If model fails, car will be invisible and non-functional.
+                // Consider adding a very simple placeholder if critical, but per request, removing full fallback.
+                this.modelLoaded = false; // Ensure model is not marked as loaded
+                console.log("Car model loading failed. No fallback geometry will be created.");
             }
         );
-    }
-
-    // Fallback method to create simple box geometry if model loading fails
-    createFallbackGeometry() {
-        const geometry = new THREE.BoxGeometry(1, 0.5, 2);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x3366cc,
-            metalness: 0.5,
-            roughness: 0.5
-        });
-
-        const boxMesh = new THREE.Mesh(geometry, material);
-        boxMesh.castShadow = true;
-        boxMesh.receiveShadow = true;
-
-        this.object.add(boxMesh);
-
-        // Position and add front indicator
-        this.object.position.y = 0.0;
-
-        const frontIndicator = new THREE.Mesh(
-            new THREE.BoxGeometry(0.5, 0.1, 0.1),
-            new THREE.MeshBasicMaterial({ color: 0xff0000 })
-        );
-        frontIndicator.position.z = 1;
-        frontIndicator.position.y = 0.3;
-        this.object.add(frontIndicator);
-
-        this.createDebugArrows();
-        this.modelLoaded = true;
     }
 
     // Method to set the scale of the car model
@@ -331,6 +288,9 @@ export class Car extends Entity {
         // Check if car is on road for friction adjustment
         this.checkIfOnRoad();
 
+        // Auto-headlights: Check time of day and turn on lights at night if they're not manually controlled
+        this.checkAutoHeadlights();
+
         // Calculate forces in local car space
         const forces = this.calculateForces(constrainedDeltaTime);
 
@@ -345,10 +305,10 @@ export class Car extends Entity {
 
         // Update debug visualization
         this.updateDebugArrows();
-
+        
         // Update UI
         if (ui && ui.updateSpeed) {
-            ui.updateSpeed(this.getSpeed() * 1.8); // m/s to km/h / 2 for scale
+            ui.updateSpeed(this.getSpeed() * 3.6); // m/s to km/h
         }
 
         console.log(`Car position: (${this.object.position.x.toFixed(2)}, ${this.object.position.y.toFixed(2)}, ${this.object.position.z.toFixed(2)})`);
@@ -453,7 +413,7 @@ export class Car extends Entity {
             const speedProportionalTorque = baseTorque * speedFactor;
 
             // Add minimum torque for low-speed maneuverability
-            const minimumTorque = steeringInput * 8000; // Base torque for parking/low-speed turns
+            const minimumTorque = steeringInput * 5000; // Base torque for parking/low-speed turns
 
             // Combine physics-based torque with minimum torque
             const combinedTorque = speedProportionalTorque + minimumTorque;
@@ -751,6 +711,159 @@ export class Car extends Entity {
         this.object.position.y = currentY + adjustmentY;
 
         console.log(`Car aligned with ground: bottom was at ${carBottom.toFixed(3)}, adjusted by ${adjustmentY.toFixed(3)}, now at y=${this.object.position.y.toFixed(3)}`);
+    }
+
+    // Create headlights for the loaded car model
+    createHeadlights() {
+        this.headlights = [];
+        this.headlightHelpers = [];
+
+        if (!this.mainBodyMesh) {
+            console.warn("Main body mesh not found for headlight positioning. Headlights will not be created.");
+            return;
+        }
+
+        // Bounding box of the unscaled main body part
+        const modelBox = new THREE.Box3().setFromObject(this.mainBodyMesh);
+        
+        const carScale = this.modelScale.x; // Assuming uniform scaling for simplicity in positioning
+
+        // Dimensions from the original model, to be scaled
+        const modelWidth = modelBox.max.x - modelBox.min.x;
+        const modelHeight = modelBox.max.y - modelBox.min.y;
+        const modelFrontZ = modelBox.max.z; // Furthest Z point of the model part
+        const modelMinY = modelBox.min.y;
+
+        // Scaled positions for headlights
+        // Place them slightly wider than the narrowest part of the car, and at a reasonable height
+        const lightXOffset = modelWidth * 0.30 * carScale; 
+        const lightYPos = (modelMinY + modelHeight * 0.65) * carScale; // 65% height of the main body
+        const lightZPos = (modelFrontZ + 0.05 / carScale) * carScale; // Positioned 0.05 units *in model space* ahead of the car front
+
+        const targetZPos = (modelFrontZ + 20 / carScale) * carScale; // Target 20 units *in model space* ahead
+        const targetYOffset = -0.002; // Target slightly lower
+
+        const commonLightParams = {
+            color: 0xffffe0, // Warm white
+            intensity: 500, // Adjusted for small scale
+            distance: 15,    // Effective range in world units (e.g., 60 model units if scale is 0.01)
+            angle: Math.PI / 5, // Approx 25 degrees cone
+            penumbra: 0.4,   // Softer edge
+            decay: 0.5       // More realistic falloff
+        };
+        
+        console.log(`Creating headlights. Car scale: ${carScale}`);
+        console.log(`Calculated light positions: X_offset=${lightXOffset.toFixed(3)}, Y=${lightYPos.toFixed(3)}, Z=${lightZPos.toFixed(3)}`);
+        console.log(`Calculated target Z: ${targetZPos.toFixed(3)}`);
+
+
+        // Left Headlight
+        const leftHeadlight = this.createSpotlight(commonLightParams);
+        leftHeadlight.position.set(-lightXOffset, lightYPos, lightZPos);
+        leftHeadlight.target.position.set(-lightXOffset * 0.5, lightYPos + targetYOffset, targetZPos);
+        this.object.add(leftHeadlight);
+        this.object.add(leftHeadlight.target);
+        this.headlights.push(leftHeadlight);
+
+        /* if (context.scene) {
+            const leftHelper = new THREE.SpotLightHelper(leftHeadlight);
+            context.scene.add(leftHelper);
+            this.headlightHelpers.push(leftHelper);
+        } */
+
+        // Right Headlight
+        const rightHeadlight = this.createSpotlight(commonLightParams);
+        rightHeadlight.position.set(lightXOffset, lightYPos, lightZPos);
+        rightHeadlight.target.position.set(lightXOffset * 0.5, lightYPos + targetYOffset, targetZPos);
+        this.object.add(rightHeadlight);
+        this.object.add(rightHeadlight.target);
+        this.headlights.push(rightHeadlight);
+
+        /* if (context.scene) {
+            const rightHelper = new THREE.SpotLightHelper(rightHeadlight);
+            context.scene.add(rightHelper);
+            this.headlightHelpers.push(rightHelper);
+        } */
+        
+        console.log(`Headlights created: ${this.headlights.length}, Helpers: ${this.headlightHelpers.length}`);
+        this.headlights.forEach((light, index) => {
+            console.log(`Headlight ${index} position:`, light.position);
+            console.log(`Headlight ${index} target position:`, light.target.position);
+        });
+
+
+        // Ensure headlights are initially set according to this.headlightsOn
+        if (this.headlightsOn) {
+            this.turnOnHeadlights();
+        } else {
+            this.turnOffHeadlights();
+        }
+    }
+
+    // Helper to create a spotlight with appropriate properties
+    createSpotlight(params) {
+        const spotlight = new THREE.SpotLight(
+            params.color,
+            params.intensity,
+            params.distance,
+            params.angle,
+            params.penumbra,
+            params.decay
+        );
+        spotlight.castShadow = true; // Enable shadows for headlights
+        spotlight.shadow.mapSize.width = 512; // Smaller shadow map for performance
+        spotlight.shadow.mapSize.height = 512;
+        spotlight.shadow.camera.near = 0.01; // Adjusted for small scale
+        spotlight.shadow.camera.far = params.distance || 1; // Match light distance
+        spotlight.shadow.bias = -0.0005; // Fine-tune to prevent self-shadowing or gaps
+        
+        return spotlight;
+    }// Turn on headlights
+    turnOnHeadlights() {
+        this.headlights.forEach(light => light.visible = true);
+        this.headlightsOn = true; // Ensure the state variable is also true
+        if (this.headlights.length > 0) {
+            console.log("Headlights turned ON - Intensity:", this.headlights[0].intensity);
+        } else {
+            console.log("Headlights turned ON (no lights initialized yet)");
+        }
+    }
+
+    // Turn off headlights
+    turnOffHeadlights() {
+        this.headlights.forEach(light => light.visible = false);
+        this.headlightsOn = false; // Ensure the state variable is also false
+        console.log("Headlights turned OFF");
+    }
+
+    // NEW: Method to check time of day and automatically control headlights
+    checkAutoHeadlights() {
+        // If we have a reference to the time of day entity
+        if (context && context.timeOfDay && !this.manuallyToggledHeadlights) { // Check manual toggle
+            const hour = context.timeOfDay.getCurrentHour();
+            
+            // Turn on headlights automatically between 6PM (18) and 6AM (6)
+            const isNighttime = (hour >= 18 || hour < 6); // Corrected to < 6 for morning
+            
+            if (isNighttime && !this.headlightsOn) {
+                this.turnOnHeadlights();
+            } else if (!isNighttime && this.headlightsOn) {
+                this.turnOffHeadlights();
+            }
+        }
+    }
+
+    // Toggle headlights on/off
+    toggleHeadlights() {
+        this.manuallyToggledHeadlights = true; // Mark that headlights have been manually controlled
+        
+        this.headlightsOn = !this.headlightsOn;
+        
+        if (this.headlightsOn) {
+            this.turnOnHeadlights();
+        } else {
+            this.turnOffHeadlights();
+        }
     }
 }
 

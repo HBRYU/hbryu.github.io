@@ -16,9 +16,9 @@ const scene = new THREE.Scene();
 
 // entityList.push(playerBox);
 
-// Load the road from TrackTexture3.json (curved track)
+// Load the road from scene.glb (GLB track with trees)
 import { RoadLoader } from './Assets/roadLoader.js';
-const roadLoader = new RoadLoader('Road', './Assets/TrackWTrees.json', scene);
+const roadLoader = new RoadLoader('Road', './Assets/trees_rocks_lamps.glb', scene);
 roadLoader.Init();
 entityList.push(roadLoader);
 
@@ -26,7 +26,7 @@ entityList.push(roadLoader);
 import { Plane } from './Assets/plane.js';
 const backgroundPlane = new Plane('BackgroundPlane', 1000, 1000);
 backgroundPlane.Init();
-backgroundPlane.position.set(0, -0.1, 0);
+backgroundPlane.position.set(0, -0.05, 0);
 
 // Load and apply ground texture from GroundTexture.json
 const textureLoader = new THREE.TextureLoader();
@@ -96,7 +96,7 @@ fetch('./Assets/GroundTexture.json')
             // Set material properties to match the original
             backgroundPlane.object.material.roughness = 1;
             backgroundPlane.object.material.metalness = 0;
-            backgroundPlane.object.material.color.setHex(0xbfb5b0);
+            backgroundPlane.object.material.color.setHex(0x969696);
         }
     })
     .catch(error => {
@@ -112,7 +112,7 @@ entityList.push(backgroundPlane);
 import { Car } from './Assets/car.js';
 const car = new Car('Car');
 car.Init(); // Call Init to create the mesh
-car.setScale(0.015, 0.015, 0.015); // Scale the car down
+car.setScale(0.01, 0.01, 0.01); // Scale the car down
 
 // Position car at start point (we'll update this once road loads)
 car.object.position.set(0, 0, 0); // Car model is slightly above ground, so we can set Y to 0
@@ -158,107 +158,31 @@ const carPositionTimeout = setTimeout(() => {
 }, 5000); // 5 second timeout
 
 
-import { GrassInstancer } from './Assets/grassInstancer.js';
-
-const grassInstancer = new GrassInstancer(
-  './Assets/Grass objects.json',
-  roadLoader,       // your already created RoadLoader instance
-  3000,              // number of each grass‐mesh
-  1200               // half‐size of the square area to scatter over
-);
-
-// wait for the road to load before placing grass
-roadLoader.Init().then(() => grassInstancer.Init());
-
-
-
-// // In init.js
-// import { TileMap, TileType } from './Assets/road.js';
-
-// // Create a 20x20 tilemap with 1-unit sized tiles
-// const tileMap = new TileMap('WorldMap', 200, 200, 1);
-
-// // Fill the world with grass
-// tileMap.fillCheckerBoard(-100, -100, 100, 100, TileType.GRASS, TileType.SAND);
-
-// // Create some water
-// tileMap.fillArea(5, 5, 10, 8, TileType.WATER);
-
-// // Create roads
-// tileMap.createPath(0, 3, 19, 3, TileType.ROAD);  // Horizontal road
-// tileMap.createPath(10, 0, 10, 19, TileType.ROAD); // Vertical road
-
-// // Add to scene
-// scene.add(tileMap.object);
-
-
+// CameraControl import and usage
 import { CameraControl } from './Assets/cameraControl.js';
 const cameraControl = new CameraControl('CameraControl', 3);
 cameraControl.Init(); // Call Init to create the mesh
 cameraControl.target = car; 
 entityList.push(cameraControl);
 
-const lights = {
-    noon: {
-        ambient: {color: 0xa3d3ff, intensity: 1.5},
-        directional: {
-            color: 0xfff5cc, 
-            intensity: 4,
-            position: new THREE.Vector3(-10, 20, 10)
-        }
-    },
-    sunset: {
-        ambient: {color: 0xdf95e6, intensity: 1.5},
-        directional: {
-            color: 0xfcba03, 
-            intensity: 9,   
-            position: new THREE.Vector3(10, 5, -20)
-        }
-    },
-    night: {
-        ambient: {color: 0x0a1929, intensity: 100},
-        directional: {
-            color: 0xc7ebff, 
-            intensity: 1,
-            position: new THREE.Vector3(-5, 15, 5)
-        }
-    }
-};
+// Remove static lights setup
 
-// Current lighting mode
-let currentLightingMode = 'sunset';
-
-// Add lighting
-const ambientLight = new THREE.AmbientLight(
-    lights[currentLightingMode].ambient.color, 
-    lights[currentLightingMode].ambient.intensity
-);
-scene.add(ambientLight);
-
-const directionalLight = new THREE.DirectionalLight(
-    lights[currentLightingMode].directional.color, 
-    lights[currentLightingMode].directional.intensity
-);
-directionalLight.position.copy(lights[currentLightingMode].directional.position);
-directionalLight.target.position.set(0, 0, 0);
-directionalLight.castShadow = true;
-directionalLight.shadow.radius = 8; // Soft shadow edge blur
-directionalLight.shadow.bias = -0.0005; // Reduce shadow acne
-
-// bigger shadow map for smoother edges
-directionalLight.shadow.mapSize.set(2048, 2048); // Increased for better quality
-
-// orthographic volume that encloses a large area around the scene
-const cam = directionalLight.shadow.camera;
-cam.left = -50;
-cam.right = 50;
-cam.top = 50;
-cam.bottom = -50;
-cam.near = 0.1;
-cam.far = 100; // Increased far distance
-cam.updateProjectionMatrix();
-
-scene.add(directionalLight);
+// Initialize dynamic time-of-day cycle
+import { TimeOfDay } from './Assets/timeOfDay.js';
+const timeCycle = new TimeOfDay('TimeOfDay', scene, {
+  cycleDuration: 120, // 24h = 2 minutes real time
+  radius: 100,
+  keyframes: {
+    0:  { ambient:{color:0x0a1929,intensity:10}, directional:{color:0xc7ebff,intensity:1} },    // 12AM
+    4:  { ambient:{color:0x0a1929,intensity:15}, directional:{color:0xc7ebff,intensity:1} },    // 4AM
+    6:  { ambient:{color:0xb1d0e3,intensity:3}, directional:{color:0xffca7a,intensity:8} },    // 6AM
+    10: { ambient:{color:0xddeaed,intensity:3}, directional:{color:0xfff5cc,intensity:4} },  // 12PM
+    14: { ambient:{color:0xddeaed,intensity:4}, directional:{color:0xfff5cc,intensity:8} },   // 3PM
+    19: { ambient:{color:0xf7d2b2,intensity:4}, directional:{color:0xffca7a,intensity:12} },
+    
+}
+});
+entityList.push(timeCycle);
 
 // Camera
 // const camera = new THREE.OrthographicCamera(
@@ -295,7 +219,7 @@ function createUI() {
     uiContainer.style.position = 'absolute';
     uiContainer.style.top = '0';
     uiContainer.style.left = '0';
-    uiContainer.style.width = '50%';
+    uiContainer.style.width = '30%';
     uiContainer.style.pointerEvents = 'none'; // Let clicks pass through to canvas
     document.body.appendChild(uiContainer);
     
@@ -310,16 +234,20 @@ function createUI() {
     statusPanel.style.pointerEvents = 'auto'; // This element captures clicks
     uiContainer.appendChild(statusPanel);    // Add content
     statusPanel.innerHTML = `
-    <h3>Game Controls</h3>    <p>WASD - Move car</p>
+    <h3>Game Controls</h3>
+    <p>WASD - Move car</p>
     <p>Space - Brake</p>
     <p>Click & Drag - Orbit camera (orbital mode only)</p>
     <p>Mouse Wheel - Zoom in/out</p>
     <p>V - Toggle camera mode (Orbital/Forward-facing)</p>
     <p>C - Toggle stability control</p>
-    <p>1/2/3 - Drift sensitivity (stable/balanced/drifty)</p>    <div id="speed">Speed: 0 km/h</div>
+    <p>1/2/3 - Drift sensitivity (stable/balanced/drifty)</p>
+    <div id="speed">Speed: 0 km/h</div>
     <div id="steering">Steering: Consistent Torque</div>
     <div id="roadStatus">Road Status: On Road</div>
     <div id="cameraMode">Camera: Orbital Mode</div>
+    <div id="timeOfDay">Time: 00:00</div>
+    <div id="timerDisplay">00:00.000</div>
 `;
 
 // Return references for updating
@@ -351,6 +279,16 @@ return {
     },
     toggleUI: (enable) => {
         uiContainer.style.display = enable ? 'block' : 'none';
+    },
+    updateTimeOfDay: (timeStr) => {
+        const td = document.getElementById('timeOfDay');
+        if (td) td.textContent = `Time: ${timeStr}`;
+    },
+    updateTimerDisplay: (timeString) => {
+        const timerDisplay = document.getElementById('timerDisplay');
+        if (timerDisplay) {
+            timerDisplay.textContent = timeString;
+        }
     }
 };
 }
@@ -362,6 +300,11 @@ ui.toggleUI(true); // Show UI on startup
 // Make UI available globally for camera control
 window.ui = ui;
 
+// In init.js, after other entities
+import { Timer } from './Assets/timer.js';
+const timer = new Timer('LapTimer');
+entityList.push(timer);
+// timer.Init(); // Init is called by the main loop
 
 // Time tracking for deltaTime
 const clock = new THREE.Clock();
@@ -381,45 +324,4 @@ const context = {
 // Export the context for main.js to use
 export { context };
 
-
-// Then make sure to update the helper in your animation loop:
-function updateLightingForCamera(cameraPosition) {
-    // Update directional light position to be relative to camera
-    directionalLight.position.set(
-        cameraPosition.x + lights[currentLightingMode].directional.position.x,
-        lights[currentLightingMode].directional.position.y,
-        cameraPosition.z + lights[currentLightingMode].directional.position.z
-    );
-    
-    // Update light target to follow camera XZ
-    directionalLight.target.position.set(cameraPosition.x, 0, cameraPosition.z);
-    directionalLight.target.updateMatrixWorld();
-    
-    // Scale shadow area based on camera height/zoom - much larger coverage
-    const cameraHeight = Math.abs(cameraPosition.y);
-    const shadowSize = Math.max(100, cameraHeight * 3); // Increased minimum and multiplier
-    
-    // Update shadow camera - center on camera position for better coverage
-    const cam = directionalLight.shadow.camera;
-    cam.left = -shadowSize;
-    cam.right = shadowSize;
-    cam.top = shadowSize;
-    cam.bottom = -shadowSize;
-    
-    // Position shadow camera to center on the target area
-    cam.position.set(
-        cameraPosition.x + lights[currentLightingMode].directional.position.x,
-        lights[currentLightingMode].directional.position.y,
-        cameraPosition.z + lights[currentLightingMode].directional.position.z
-    );
-    
-    // Increase shadow distance based on scene size
-    cam.near = 0.1;
-    cam.far = shadowSize * 3; // Dynamic far plane
-    
-    cam.updateProjectionMatrix();
-}
-
-// Export the function so it can be used in main.js
-export { updateLightingForCamera };
 

@@ -70,7 +70,7 @@ export function createPostProcessing(scene, camera, renderer) {
     const toonShader = {
         uniforms: {
             "tDiffuse": { value: null },
-            "numLevels": { value: 16.0 },
+            "numLevels": { value: 32.0 },
             "edgeThickness": { value: 0.0 },
             "edgeColor": { value: new THREE.Color(0x000000) },
             "resolution": { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
@@ -131,7 +131,7 @@ export function createPostProcessing(scene, camera, renderer) {
     const pixelShader = {
         uniforms: {
             "tDiffuse": { value: null },
-            "pixelSize": { value: 2.0 },
+            "pixelSize": { value: 3.0 },
             "resolution": { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
         },
         vertexShader: `
