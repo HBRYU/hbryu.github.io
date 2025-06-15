@@ -127,7 +127,7 @@ export class Car extends Entity {
         const loader = new THREE.ObjectLoader();
 
         loader.load(
-            './Assets/_car.json',
+            './Assets/car.json',
             (carModel) => {
                 console.log("Car model loaded successfully");
 
