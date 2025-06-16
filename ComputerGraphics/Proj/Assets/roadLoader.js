@@ -14,6 +14,8 @@ export class RoadLoader extends Entity {
         this.trackConfig = null;
         this.textureLoader = new THREE.TextureLoader();
         this.loadedTextures = new Map();
+        this.roadMeshForCar = null; // Added for car's raycasting
+        this.roadBoundsForCar = []; // Added for car's fallback bounds
     }    // Replace both Init() and loadTrackConfig() with one async Init():
     async Init() {
     try {
@@ -23,10 +25,17 @@ export class RoadLoader extends Entity {
 
         // Build the scene from gltf.scene (materials/textures already embedded)
         this.loadScene(gltf.scene);
-
+        this.isLoaded = true; // Mark as loaded
         console.log('RoadLoader: GLB Scene loaded successfully');
+        if (this.context && this.context.ui && typeof this.context.ui.updateRoadStatusMessage === 'function') {
+            this.context.ui.updateRoadStatusMessage("Road Status: Ready");
+        }
     } catch (err) {
         console.error('RoadLoader.Init failed:', err);
+        this.isLoaded = false; // Ensure isLoaded is false on error
+        if (this.context && this.context.ui && typeof this.context.ui.updateRoadStatusMessage === 'function') {
+            this.context.ui.updateRoadStatusMessage("Road Status: Error loading road");
+        }
     }
 }
 
@@ -153,6 +162,8 @@ export class RoadLoader extends Entity {
 
         this.object = new THREE.Group();
         this.object.name = this.name;
+        this.roadMeshForCar = null; // Initialize here
+        this.roadBoundsForCar = []; // Initialize here
 
         // Force world matrices to be correct
         loadedScene.updateMatrixWorld(true);
@@ -191,7 +202,8 @@ export class RoadLoader extends Entity {
             mesh.scale.copy(worldScale);
             if(child.name === 'Plane') {
                 this.alignMeshToGround(mesh);
-                console.log("plane");
+                this.roadMeshForCar = mesh; // Assign to the new property
+                console.log("plane assigned to roadMeshForCar");
             }
             else if(child.name.toLowerCase().includes('rock')) {
                 // align road pieces to ground
@@ -221,6 +233,16 @@ export class RoadLoader extends Entity {
             }
             // … your existing per‐piece material/shadow logic …
             this.object.add(mesh);
+            
+            // Populate roadBoundsForCar for fallback detection, excluding Start/Finish
+            if (child.isMesh && child.name !== 'Start' && child.name !== 'Finish' && child.name !== 'Plane') {
+                const box = new THREE.Box3().setFromObject(mesh); // Use the cloned and transformed mesh
+                this.roadBoundsForCar.push({
+                    min: box.min,
+                    max: box.max,
+                    name: child.name
+                });
+            }
         });
 
         // now we’re loaded
@@ -286,5 +308,17 @@ export class RoadLoader extends Entity {
 
     getFinishPosition() {
         return this.finishPosition ? this.finishPosition.clone() : new THREE.Vector3(0, 0, 0);
+    }
+
+    // NEW: Method to provide road geometry for the car
+    getRoadGeometry() {
+        if (!this.isLoaded) {
+            console.warn("RoadLoader: Attempted to get road geometry before loading complete.");
+            return null;
+        }
+        return {
+            roadMesh: this.roadMeshForCar,
+            roadBounds: this.roadBoundsForCar
+        };
     }
 }

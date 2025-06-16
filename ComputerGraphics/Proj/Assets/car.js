@@ -17,14 +17,14 @@ export class Car extends Entity {
         this.engineForce = 8000;
         this.brakeForce = 120000;
         // Physical properties
-        this.mass = 1800;
-        this.momentOfInertia = 3000;
+        this.mass = 2400;
+        this.momentOfInertia = 3500; // Increased for more stable rotation, less twitchy
         this.dragCoefficient = 0.55;
 
         // Tire properties
-        this.tireFriction = 0.99;
-        this.tireGrip = 0.99;
-        this.corneringStiffness = 250000;
+        this.tireFriction = 0.8; // Overall friction, affects rolling resistance and general deceleration
+        this.tireGrip = 0.4;     // Affects how strongly tires resist lateral slip and align to steering. Range ~0.5 (slippery) to ~2.5 (very grippy)
+        this.corneringStiffness = 280000; // How sharply tires respond to steering input to generate cornering force
 
         // Stability control properties
         this.stabilityControl = true;
@@ -43,7 +43,7 @@ export class Car extends Entity {
         // Headlight properties
         this.headlights = []; // Store headlight objects
         this.headlightHelpers = []; // Store SpotLightHelper objects
-        this.headlightsOn = true; // Start with headlights on
+        this.headlightsOn = false; // Start with headlights off
         this.manuallyToggledHeadlights = false; // Track if user manually toggled
 
         // Create a group to hold the model
@@ -276,6 +276,17 @@ export class Car extends Entity {
     Start() {
         // Initialize any state when the car is added to the scene
         console.log("Car controls: WASD or Arrow keys to drive");
+
+        // Get timeOfDay from context if available
+        // entities is not iterable
+        for (const entity of context.entityList) {
+            if (entity.name === 'TimeOfDay') {
+                this.timeOfDay = entity; // Store reference to timeOfDay entity
+                console.log("Car found timeOfDay entity:", this.timeOfDay);
+                break;
+            }
+        }
+        //this.elapsed = (initialHour / 24) * this.cycleDuration;
     } 
 
     Update(deltaTime) {
@@ -311,7 +322,8 @@ export class Car extends Entity {
             ui.updateSpeed(this.getSpeed() * 3.6); // m/s to km/h
         }
 
-        console.log(`Car position: (${this.object.position.x.toFixed(2)}, ${this.object.position.y.toFixed(2)}, ${this.object.position.z.toFixed(2)})`);
+        // 
+        // console.log(`Car position: (${this.object.position.x.toFixed(2)}, ${this.object.position.y.toFixed(2)}, ${this.object.position.z.toFixed(2)})`);
     }
 
     calculateForces(deltaTime) {
@@ -364,78 +376,68 @@ export class Car extends Entity {
         if (Math.abs(forwardVelocity) > 0.1) {
             forces.longitudinal -= Math.sign(forwardVelocity) * rollingResistance;
         } else if (Math.abs(forwardVelocity) <= 0.1 && !this.accelPressed) {
-            forces.longitudinal = -forwardVelocity * this.mass / deltaTime;
+            // Stronger force to bring car to a stop if no acceleration is applied at very low speeds
+            forces.longitudinal = -forwardVelocity * this.mass / (deltaTime + 0.001); // Add small epsilon to avoid division by zero
         }
-        // Simplified lateral friction with off-road detection
-        if (Math.abs(lateralVelocity) > 0.05) {
-            // Apply off-road friction multiplier if car is off-road
-            const frictionMultiplier = this.isOnRoad ? 1.0 : this.offRoadFrictionMultiplier;
-            const effectiveFriction = this.tireFriction * frictionMultiplier;
 
-            const lateralFrictionForce = -effectiveFriction * normalForce * Math.sign(lateralVelocity);
-            forces.lateral += lateralFrictionForce;
-
-            // Debug output for off-road detection
-            if (!this.isOnRoad) {
-                console.log(`OFF-ROAD: Increased friction by ${frictionMultiplier}x`);
-            }
-        }
-        // CONSISTENT TORQUE STEERING: Apply same torque regardless of speed
+        // --- Steering and Tire Grip Physics ---
         const steeringInput = this.leftPressed ? 1 : (this.rightPressed ? -1 : 0);
+        // const normalForce = this.mass * 9.81; // Already defined above, ensure it's available or pass as param
 
-        if (steeringInput !== 0 && Math.abs(forwardVelocity) > 0.5) {
-            // Fixed steering angle (no speed dependency for input)
-            const maxSteeringAngle = 0.5;
+        if (steeringInput !== 0 && Math.abs(forwardVelocity) > 0.2) { // Min speed for steering
+            const maxSteeringAngle = 0.5; // Radians
             const steeringAngle = steeringInput * maxSteeringAngle;
 
-            // Calculate cornering force - this is where speed matters for physics
-            const currentSlipAngle = Math.atan2(lateralVelocity, Math.abs(forwardVelocity));
-            const targetSlipAngle = currentSlipAngle - steeringAngle;
+            // 1. Calculate Cornering Force (initiates the turn)
+            // Slip angle is the difference between where the wheels are pointing and where the car is going.
+            const slipAngle = Math.atan2(lateralVelocity, Math.abs(forwardVelocity)) - steeringAngle * Math.sign(forwardVelocity);
+            let corneringForce = -this.corneringStiffness * slipAngle;
 
-            // Cornering force proportional to speed for realistic physics
-            let corneringForce = -this.corneringStiffness * targetSlipAngle;
-
-            // Limit cornering force
-            const maxCorneringForce = 15000;
+            const maxCorneringForce = normalForce * 1.2; // Max cornering force related to normal force
             corneringForce = Math.max(-maxCorneringForce, Math.min(corneringForce, maxCorneringForce));
-
             forces.lateral += corneringForce;
 
-            // PHYSICS-BASED TORQUE: Torque proportional to speed for realistic cornering
-            const wheelbase = 2.5;
+            // 2. Calculate Torque from Cornering Force
+            const wheelbase = 2.8; // Effective distance between front and rear axles
+            let torque = corneringForce * wheelbase * 0.5; // Simplified: force applied at front axle
+            
+            // Adjust torque based on speed to simulate understeer/oversteer characteristics
+            const speedFactorForTorque = 1.0 - Math.min(1, (speed / this.maxSpeed) * 0.7);
+            torque *= speedFactorForTorque;
 
-            // The faster you go, the more torque is generated from the same cornering force
-            // This creates realistic understeer at high speeds while maintaining control
-            const baseTorque = corneringForce * (wheelbase / 2) * Math.sign(forwardVelocity);
-
-            // Speed factor for torque - more torque at higher speeds (realistic physics)
-            const speedFactor = Math.min(Math.abs(forwardVelocity) / 10, 2.0); // Cap at 2x for very high speeds
-            const speedProportionalTorque = baseTorque * speedFactor;
-
-            // Add minimum torque for low-speed maneuverability
-            const minimumTorque = steeringInput * 5000; // Base torque for parking/low-speed turns
-
-            // Combine physics-based torque with minimum torque
-            const combinedTorque = speedProportionalTorque + minimumTorque;
-
-            // UPPER BOUND: Limit maximum torque to prevent instability
-            const maxTorque = 25000; // Maximum allowable torque
-            const finalTorque = Math.max(-maxTorque, Math.min(combinedTorque, maxTorque));
-
-            forces.torque += finalTorque;
-
-            // Debug output for understanding the physics
-            const speedKmh = Math.abs(forwardVelocity) * 3.6;
-            if (speedKmh > 20) {
-                console.log(`Physics steering - Speed: ${speedKmh.toFixed(1)} km/h, Speed Factor: ${speedFactor.toFixed(2)}x, Torque: ${finalTorque.toFixed(0)} (max: ${maxTorque})`);
-            }
+            const maxTorque = this.momentOfInertia * 2.5; // Max rotational acceleration cap
+            forces.torque += Math.max(-maxTorque, Math.min(torque, maxTorque));
         }
+
+        // 3. Tire Grip (Corrective force against lateral slip, always active if there's lateral velocity)
+        if (Math.abs(lateralVelocity) > 0.01) {
+            const frictionMultiplier = this.isOnRoad ? 1.0 : (1.0 / this.offRoadFrictionMultiplier); // Off-road reduces grip
+            
+            // Grip force is stronger when lateral velocity is high relative to forward velocity (car is sliding)
+            // And also stronger at lower absolute speeds (more control during slow slides)
+            const gripFactor = Math.tanh(Math.abs(lateralVelocity) / (Math.abs(forwardVelocity) + 1.0)) * (1.0 - Math.min(1, speed / (this.maxSpeed * 0.5)));
+            
+            let gripForceMagnitude = this.tireGrip * normalForce * frictionMultiplier * gripFactor;
+            
+            // Ensure grip force doesn't exceed what's physically plausible (e.g., related to cornering force limits)
+            const maxPossibleGrip = normalForce * this.tireGrip * frictionMultiplier; 
+            gripForceMagnitude = Math.min(gripForceMagnitude, maxPossibleGrip);
+
+            // Apply force opposing the lateral velocity
+            forces.lateral -= Math.sign(lateralVelocity) * gripForceMagnitude;
+
+            if (!this.isOnRoad) {
+                // console.log(`OFF-ROAD: Reduced grip. Multiplier: ${frictionMultiplier.toFixed(2)}, Grip Force: ${(Math.sign(lateralVelocity) * gripForceMagnitude).toFixed(0)}`);
+            }
+        }        
+        // Removed old lateral friction and simplified torque steering logic
+        // The new steering model combines cornering force, torque, and a separate tire grip mechanism.
 
         return forces;
     }
 
     applyForces(forces, deltaTime) {
-        // Get car's rotation
+        // Get car's rotation (yaw)
         const carRotation = this.object.rotation.y;
 
         // Convert local forces to world space using rotation matrix
@@ -452,7 +454,47 @@ export class Car extends Entity {
 
         // Apply torque to angular velocity
         const angularAcceleration = forces.torque / this.momentOfInertia;
-        this._angularVelocity += angularAcceleration * deltaTime;
+        this._angularVelocity += angularAcceleration * deltaTime; 
+
+        // --- Grip-based velocity adjustment ---
+        // This part directly nudges the velocity vector towards the car's orientation based on tireGrip.
+        // It's a more direct way to implement the idea that tires want to follow the car's direction.
+        if (Math.abs(this.getSpeed()) > 0.1) { // Only apply if moving
+            const carAngle = this.object.rotation.y;
+            const carDirection = new THREE.Vector2(Math.sin(carAngle), Math.cos(carAngle)); // Forward vector of the car
+
+            // Current velocity direction
+            let currentVelocityVec = new THREE.Vector2(this._velocity.x, this._velocity.y);
+            const speed = currentVelocityVec.length();
+            if (speed < 0.01) return; // Avoid issues with zero speed
+            // currentVelocityVec.normalize(); // No, we need the actual velocity for lerping
+
+            // Target velocity direction (aligned with car)
+            const targetVelocityVec = carDirection.multiplyScalar(speed);
+
+            // Interpolate current velocity towards target velocity based on tireGrip and deltaTime
+            // A higher tireGrip means we move closer to the targetVelocityVec each frame.
+            const gripInfluence = Math.min(this.tireGrip * (deltaTime / (1.0/60.0)), 1.0); // Normalize grip influence by typical frame time, cap at 1
+            
+            const newVelocityX = currentVelocityVec.x + (targetVelocityVec.x - currentVelocityVec.x) * gripInfluence;
+            const newVelocityY = currentVelocityVec.y + (targetVelocityVec.y - currentVelocityVec.y) * gripInfluence;
+            
+            // Dampen the change if it's too aggressive, especially at high speeds or high grip
+            // This prevents overly snappy corrections.
+            const maxChange = speed * 0.5 * gripInfluence; // Allow up to 50% of speed change per update based on grip
+            
+            const dVx = newVelocityX - this._velocity.x;
+            const dVy = newVelocityY - this._velocity.y;
+            const changeMag = Math.sqrt(dVx*dVx + dVy*dVy);
+
+            if (changeMag > maxChange) {
+                this._velocity.x += (dVx / changeMag) * maxChange;
+                this._velocity.y += (dVy / changeMag) * maxChange;
+            } else {
+                this._velocity.x = newVelocityX;
+                this._velocity.y = newVelocityY;
+            }
+        }
     }
 
     constrainVelocities() {
@@ -596,30 +638,18 @@ export class Car extends Entity {
         console.log(`Drift sensitivity set to ${sensitivity} (slip angle: ${this.maxSlipAngle.toFixed(2)})`);
     }
     // NEW: Method to set road boundaries for off-road detection
-    setRoadBounds(roadObject) {
-        if (!roadObject) return;
+    setRoadData(roadData) { // Renamed from setRoadBounds and takes structured data
+        if (!roadData) {
+            console.warn("Car: setRoadData called with no data.");
+            this.roadMesh = null;
+            this.roadBounds = [];
+            return;
+        }
 
-        this.roadBounds = [];
-        this.roadMesh = null;
+        this.roadMesh = roadData.roadMesh || null;
+        this.roadBounds = roadData.roadBounds || [];
 
-        // Find the actual road mesh (Plane) with geometry data
-        roadObject.traverse((child) => {
-            if (child.isMesh && child.name === 'Plane') {
-                this.roadMesh = child;
-                console.log(`Car: Found road mesh 'Plane' for curved path detection`);
-            }
-            // Keep existing bounding box system as fallback
-            else if (child.isMesh && child.name !== 'Start' && child.name !== 'Finish') {
-                const box = new THREE.Box3().setFromObject(child);
-                this.roadBounds.push({
-                    min: box.min,
-                    max: box.max,
-                    name: child.name
-                });
-            }
-        });
-
-        console.log(`Car: Road detection setup - Found ${this.roadMesh ? 'curved mesh' : 'no mesh'}, ${this.roadBounds.length} fallback bounds`);
+        console.log(`Car: Road detection setup - Road Mesh ${this.roadMesh ? 'FOUND' : 'NOT FOUND'}. Bounds count: ${this.roadBounds.length}`);
     }
     // NEW: Check if car is currently on the road
     checkIfOnRoad() {
@@ -839,8 +869,9 @@ export class Car extends Entity {
     // NEW: Method to check time of day and automatically control headlights
     checkAutoHeadlights() {
         // If we have a reference to the time of day entity
-        if (context && context.timeOfDay && !this.manuallyToggledHeadlights) { // Check manual toggle
-            const hour = context.timeOfDay.getCurrentHour();
+        if (context && this.timeOfDay) { // Check manual toggle
+            // console.log("Checking auto headlights based on time of day...");
+            const hour = this.timeOfDay.getCurrentHour();
             
             // Turn on headlights automatically between 6PM (18) and 6AM (6)
             const isNighttime = (hour >= 18 || hour < 6); // Corrected to < 6 for morning

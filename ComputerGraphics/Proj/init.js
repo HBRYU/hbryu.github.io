@@ -118,45 +118,74 @@ car.setScale(0.01, 0.01, 0.01); // Scale the car down
 car.object.position.set(0, 0, 0); // Car model is slightly above ground, so we can set Y to 0
 entityList.push(car);
 
-// Set up car positioning after road loads
-let carPositionInterval = setInterval(() => {
-    if (roadLoader.isLoaded && car.modelLoaded) {
-        // use raw startPosition – no scaling
-        let startPos = roadLoader.getStartPosition();
-
-        // default fallback if loader failed to find one
-        if (!startPos) {
-            console.warn('No start pos, using hard-coded default');
-            startPos = new THREE.Vector3(-1.7, 0, -14.4);
+// --- Car Initial Positioning Logic (uses road data if available by timeout) ---
+let initialCarPositionSet = false;
+const initialPositionInterval = setInterval(() => {
+    if (car.modelLoaded && !initialCarPositionSet) { // Wait for car model to be loaded and position not yet set
+        let positionSource = 'default_fallback'; // For logging
+        if (roadLoader.isLoaded) { // If road is also loaded, try to use its start position
+            let startPos = roadLoader.getStartPosition();
+            if (startPos) {
+                car.object.position.set(startPos.x, startPos.y + 0.5, startPos.z);
+                positionSource = 'road_data';
+            } else {
+                console.warn('Init.js: Road loaded but no startPos found for initial positioning. Using fallback.');
+                car.object.position.set(-1.7, 0, -14.4); // Fallback if road loaded but no startPos
+                positionSource = 'hardcoded_fallback_after_road_load';
+            }
+        } else {
+            // Road not yet loaded, but car model is. We will let the timeout handle default positioning if road remains unloaded.
+            // If road loads before timeout, this interval will run again and the block above will execute.
+            return; // Exit and re-check in the next interval tick.
         }
 
-        // directly place car at marker + a small Y offset
-        car.object.position.set(
-            startPos.x,
-            startPos.y + 0.5,
-            startPos.z
-        );
         car.object.rotation.set(0, Math.PI, 0);
         car.alignWithGround();
-
-        if (roadLoader.object) {
-            car.setRoadBounds(roadLoader.object);
-        }
-
-        clearInterval(carPositionInterval);
-        clearTimeout(carPositionTimeout);
-        console.log('Car positioned at', car.object.position);
+        initialCarPositionSet = true;
+        console.log(`Car initial position set via ${positionSource}. Position:`, car.object.position);
+        clearInterval(initialPositionInterval); // Stop this interval
+        clearTimeout(initialPositionTimeout); // Clear the corresponding timeout
     }
-}, 100); // Check every 100ms
+}, 100); // Check frequently
 
-// Add timeout to prevent infinite waiting - store reference so we can clear it
-const carPositionTimeout = setTimeout(() => {
-    clearInterval(carPositionInterval);
-    console.warn('Position timeout – forcing default');
-    car.object.position.set(-4.68, -0.32, -31);
-    car.object.rotation.set(0, Math.PI, 0);
-    if (car.modelLoaded) car.alignWithGround();
-}, 12000); // 5 second timeout
+const initialPositionTimeout = setTimeout(() => {
+    if (!initialCarPositionSet) {
+        console.warn('Init.js: Car initial positioning timeout – forcing default position.');
+        car.object.position.set(-4.68, -0.32, -31); // Default position if road/car didn't load in time
+        if (car.modelLoaded) {
+            car.object.rotation.set(0, Math.PI, 0);
+            car.alignWithGround();
+        } else {
+            // If car model itself isn't loaded by timeout, create a mini-interval to align it once it is
+            const alignFallbackInterval = setInterval(() => {
+                if (car.modelLoaded) {
+                    car.object.rotation.set(0, Math.PI, 0);
+                    car.alignWithGround();
+                    clearInterval(alignFallbackInterval);
+                }
+            }, 50);
+        }
+        initialCarPositionSet = true; // Mark as positioned
+    }
+    clearInterval(initialPositionInterval); // Ensure interval is stopped in any case after timeout
+}, 12000); // 12-second timeout for initial positioning
+
+// --- Set Road Physics Data for the Car (runs independently until success) ---
+const setRoadDataInterval = setInterval(() => {
+    if (roadLoader.isLoaded && car.modelLoaded) { // Ensure both road and car model are loaded
+        const roadGeoData = roadLoader.getRoadGeometry();
+        if (roadGeoData && roadGeoData.roadMesh) { // Check for valid data, especially roadMesh
+            car.setRoadData(roadGeoData);
+            console.log('Init.js: Road physics data successfully set for car.');
+            clearInterval(setRoadDataInterval); // Task complete, stop this interval
+        } else if (roadLoader.isLoaded && !roadGeoData?.roadMesh) {
+            // Road is loaded, car model is loaded, but roadMesh is missing from geometry data.
+            // This might indicate an issue with the GLB or roadLoader logic.
+            console.warn('Init.js: Road and car models loaded, but roadMesh is missing in roadGeoData. Retrying...');
+        }
+        // If conditions aren't fully met (e.g., roadGeoData is null despite roadLoader.isLoaded), the interval continues.
+    }
+}, 100); // Check frequently
 
 
 // CameraControl import and usage
@@ -241,11 +270,8 @@ function createUI() {
     <p>Click & Drag - Orbit camera (orbital mode only)</p>
     <p>Mouse Wheel - Zoom in/out</p>
     <p>V - Toggle camera mode (Orbital/Forward-facing)</p>
-    <p>C - Toggle stability control</p>
-    <p>1/2/3 - Drift sensitivity (stable/balanced/drifty)</p>
     <div id="speed">Speed: 0 km/h</div>
-    <div id="steering">Steering: Consistent Torque</div>
-    <div id="roadStatus">Road Status: On Road</div>
+    <div id="roadStatus">Road Status: Loading...</div>
     <div id="cameraMode">Camera: Orbital Mode</div>
     <div id="timeOfDay">Time: 00:00</div>
     <div id="timerDisplay">00:00.000</div>
@@ -262,13 +288,15 @@ return {
             steeringElement.textContent = `Steering: Consistent Torque`;
         }
         
-        // Update road status based on car's current state
-        const roadStatusElement = document.getElementById('roadStatus');
-        if (roadStatusElement && car) {
-            const status = car.isOnRoad ? 'On Road' : 'Off Road (High Friction)';
-            const color = car.isOnRoad ? 'white' : '#ff6b6b';
-            roadStatusElement.textContent = `Road Status: ${status}`;
-            roadStatusElement.style.color = color;
+        // Update road status based on car's current state ONLY if road is loaded
+        if (roadLoader.isLoaded) {
+            const roadStatusElement = document.getElementById('roadStatus');
+            if (roadStatusElement && car) {
+                const status = car.isOnRoad ? 'On Road' : 'Off Road (High Friction)';
+                const color = car.isOnRoad ? 'white' : '#ff6b6b';
+                roadStatusElement.textContent = `Road Status: ${status}`;
+                roadStatusElement.style.color = color;
+            }
         }
     },
     updateCameraMode: (mode) => {
@@ -290,12 +318,21 @@ return {
         if (timerDisplay) {
             timerDisplay.textContent = timeString;
         }
+    },
+    updateRoadStatusMessage: (message) => {
+        const roadStatusElement = document.getElementById('roadStatus');
+        if (roadStatusElement) {
+            roadStatusElement.textContent = message;
+            // Reset color to default when setting a generic message like "Loading..." or "Loaded"
+            roadStatusElement.style.color = 'white';
+        }
     }
 };
 }
 
 // Use it in your main loop
 export const ui = createUI();
+// ui.updateRoadStatusMessage("Road Status: Loading..."); // Set initial loading message - already set in innerHTML
 ui.toggleUI(true); // Show UI on startup
 
 // Make UI available globally for camera control
