@@ -15,7 +15,7 @@ export class Car extends Entity {
         // Car performance specs
         this.maxSpeed = 80;
         this.engineForce = 8000;
-        this.brakeForce = 120000;
+        this.brakeForce = 50000;
         // Physical properties
         this.mass = 2400;
         this.momentOfInertia = 3500; // Increased for more stable rotation, less twitchy
@@ -35,6 +35,7 @@ export class Car extends Entity {
         // Input state
         this.accelPressed = false;
         this.brakePressed = false;
+        this.reversePressed = false;
         this.leftPressed = false;
         this.rightPressed = false;
         this.modelLoaded = false;
@@ -72,7 +73,7 @@ export class Car extends Entity {
                     break;
                 case 'ArrowDown':
                 case 's':
-                    this.brakePressed = true;
+                    this.reversePressed = true;
                     break;
                 case 'ArrowLeft':
                 case 'a':
@@ -81,6 +82,9 @@ export class Car extends Entity {
                 case 'ArrowRight':
                 case 'd':
                     this.rightPressed = true;
+                    break;
+                case ' ':
+                    this.brakePressed = true;
                     break;
                 case 'c': // Toggle stability control
                     this.toggleStabilityControl();
@@ -110,7 +114,7 @@ export class Car extends Entity {
                     break;
                 case 'ArrowDown':
                 case 's':
-                    this.brakePressed = false;
+                    this.reversePressed = false;
                     break;
                 case 'ArrowLeft':
                 case 'a':
@@ -119,6 +123,9 @@ export class Car extends Entity {
                 case 'ArrowRight':
                 case 'd':
                     this.rightPressed = false;
+                    break;
+                case ' ':
+                    this.brakePressed = false;
                     break;
             }
         });
@@ -338,13 +345,24 @@ export class Car extends Entity {
         const lateralVelocity = localVelocity.x;
         const speed = this.getSpeed();
 
-        // Engine forces (removed stability control interference)
+        // Forward throttle
         if (this.accelPressed) {
             const speedFactor = Math.max(0.2, 1.0 - Math.pow(forwardVelocity / this.maxSpeed, 2));
-            forces.longitudinal += this.engineForce * speedFactor; // No stabilityFactor here
+            forces.longitudinal += this.engineForce * speedFactor;
         }
 
-        // Braking forces
+        // Reverse key: brake if moving forward, else apply reverse thrust
+        if (this.reversePressed) {
+            if (forwardVelocity > 0.1) {
+                const brakeEfficiency = Math.min(1.0, Math.max(0.2, forwardVelocity / 5.0));
+                forces.longitudinal -= Math.sign(forwardVelocity) * this.brakeForce * brakeEfficiency;
+            } else {
+                const speedFactor = Math.max(0.2, 1.0 - Math.pow(-forwardVelocity / this.maxSpeed, 2));
+                forces.longitudinal -= this.engineForce * speedFactor;
+            }
+        }
+
+        // Braking (spacebar)
         if (this.brakePressed) {
             const brakeEfficiency = Math.min(1.0, Math.max(0.2, Math.abs(forwardVelocity) / 5.0));
             forces.longitudinal -= Math.sign(forwardVelocity) * this.brakeForce * brakeEfficiency;

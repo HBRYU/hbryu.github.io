@@ -103,7 +103,7 @@ export class Timer extends Entity {
 
         // Check for starting the timer
         const distanceToStart = carPosition.distanceTo(this.startPoint);
-        if (distanceToStart < 2.0) { // World units
+        if (distanceToStart < 3.0) { // World units
             // Start if not running, or reset if already running (e.g., passed start line again)
             if (!this.isRunning || (this.isRunning && this.elapsedTime > 0.1)) { // Add small threshold to prevent instant re-trigger
                 this.startTime = performance.now();
