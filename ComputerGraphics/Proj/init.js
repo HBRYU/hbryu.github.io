@@ -18,7 +18,7 @@ const scene = new THREE.Scene();
 
 // Load the road from scene.glb (GLB track with trees)
 import { RoadLoader } from './Assets/roadLoader.js';
-const roadLoader = new RoadLoader('Road', './Assets/trees_rocks_lamps.glb', scene);
+const roadLoader = new RoadLoader('Road', './Assets/scene.glb', scene);
 roadLoader.Init();
 entityList.push(roadLoader);
 
@@ -154,6 +154,7 @@ const carPositionTimeout = setTimeout(() => {
     clearInterval(carPositionInterval);
     console.warn('Position timeout – forcing default');
     car.object.position.set(-4.68, -0.32, -31);
+    car.object.rotation.set(0, Math.PI, 0);
     if (car.modelLoaded) car.alignWithGround();
 }, 12000); // 5 second timeout
 
