@@ -1724,6 +1724,64 @@ function dbg(text) {
         'important');
     }
 
+  function _DroneLab_SetWebAudioLowpass(cutoff, transitionSeconds) {
+      if (typeof WEBAudio === 'undefined' || !WEBAudio.audioContext) {
+        return;
+      }
+  
+      var context = WEBAudio.audioContext;
+      var filter = WEBAudio.droneLabLowpassFilter;
+  
+      if (!filter) {
+        filter = context.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.value = 0.707;
+        filter.frequency.value = Math.min(22000, context.sampleRate * 0.49);
+        WEBAudio.droneLabLowpassFilter = filter;
+  
+        // Unity 6 WebGL connects each channel gain directly to destination.
+        // Insert the shared filter for current channels and intercept subsequent
+        // destination connections made by Unity while this player is running.
+        var originalConnect = AudioNode.prototype.connect;
+        WEBAudio.droneLabOriginalAudioConnect = originalConnect;
+        originalConnect.call(filter, context.destination);
+        AudioNode.prototype.connect = function(destination) {
+          var args = Array.prototype.slice.call(arguments);
+          if (destination === context.destination && this !== filter) {
+            args[0] = filter;
+          }
+          return originalConnect.apply(this, args);
+        };
+  
+        if (WEBAudio.audioInstances) {
+          Object.keys(WEBAudio.audioInstances).forEach(function(key) {
+            var instance = WEBAudio.audioInstances[key];
+            if (!instance || !instance.gain) {
+              return;
+            }
+  
+            try {
+              instance.gain.disconnect(context.destination);
+            } catch (ignored) {}
+  
+            try {
+              originalConnect.call(instance.gain, filter);
+            } catch (ignored) {}
+          });
+        }
+      }
+  
+      var safeMaximum = context.sampleRate * 0.49;
+      var target = Math.max(10, Math.min(cutoff, safeMaximum));
+      var now = context.currentTime;
+      var duration = Math.max(0.001, transitionSeconds);
+      filter.frequency.cancelScheduledValues(now);
+      filter.frequency.setValueAtTime(
+        Math.max(10, filter.frequency.value),
+        now);
+      filter.frequency.exponentialRampToValueAtTime(target, now + duration);
+    }
+
   function _GetJSLoadTimeInfo(loadTimePtr) {
     loadTimePtr = (loadTimePtr >> 2);
     HEAPU32[loadTimePtr] = Module.pageStartupTime || 0;
@@ -16328,6 +16386,7 @@ function checkIncomingModuleAPI() {
 }
 var wasmImports = {
   "DroneLab_SetCanvasCursorVisible": _DroneLab_SetCanvasCursorVisible,
+  "DroneLab_SetWebAudioLowpass": _DroneLab_SetWebAudioLowpass,
   "GetJSLoadTimeInfo": _GetJSLoadTimeInfo,
   "GetJSMemoryInfo": _GetJSMemoryInfo,
   "JS_Accelerometer_IsRunning": _JS_Accelerometer_IsRunning,
