@@ -1706,6 +1706,24 @@ function dbg(text) {
       }
     }
 
+  function _DroneLab_SetCanvasCursorVisible(visible) {
+      var canvas = Module['canvas'];
+      if (!canvas) {
+        canvas = document.getElementById('unity-canvas');
+      }
+      if (!canvas) {
+        canvas = document.querySelector('canvas');
+      }
+      if (!canvas) {
+        return;
+      }
+  
+      canvas.style.setProperty(
+        'cursor',
+        visible ? 'default' : 'none',
+        'important');
+    }
+
   function _GetJSLoadTimeInfo(loadTimePtr) {
     loadTimePtr = (loadTimePtr >> 2);
     HEAPU32[loadTimePtr] = Module.pageStartupTime || 0;
@@ -16309,6 +16327,7 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var wasmImports = {
+  "DroneLab_SetCanvasCursorVisible": _DroneLab_SetCanvasCursorVisible,
   "GetJSLoadTimeInfo": _GetJSLoadTimeInfo,
   "GetJSMemoryInfo": _GetJSMemoryInfo,
   "JS_Accelerometer_IsRunning": _JS_Accelerometer_IsRunning,
